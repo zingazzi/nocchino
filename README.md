@@ -357,8 +357,7 @@ import { repository } from 'nocchino'
 
 // Direct access to repository instance for advanced usage
 const state = repository.getState()
-console.log('Active intercepts:', state.activeIntercepts)
-console.log('Base URL:', state.baseUrl)
+// Access state properties as needed
 ```
 
 ### Type Definitions

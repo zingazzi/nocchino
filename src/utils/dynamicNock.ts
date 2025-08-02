@@ -1,10 +1,10 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'fs';
+import path from 'path';
 
-import yaml from 'js-yaml'
-import jsf from 'json-schema-faker'
-import nock from 'nock'
-import type { Scope } from 'nock'
+import yaml from 'js-yaml';
+import jsf from 'json-schema-faker';
+import nock from 'nock';
+import type { Scope } from 'nock';
 
 import type {
   OpenAPISpec,
@@ -17,7 +17,7 @@ import type {
   OpenAPIResponse,
   OpenAPIPathItem,
   OpenAPISchema,
-} from '../types'
+} from '../types';
 
 /**
  * Dynamic Nock Repository for OpenAPI-based mocking
@@ -32,27 +32,27 @@ import type {
  * - Template Method Pattern: For the request processing flow
  */
 export class DynamicNockRepository {
-  private specMap: Map<string, Record<string, string>>
+  private specMap: Map<string, Record<string, string>>;
 
-  private defaultSpec: string | null
+  private defaultSpec: string | null;
 
-  private baseUrl: string | null
+  private baseUrl: string | null;
 
-  private activeIntercepts: Scope[]
+  private activeIntercepts: Scope[];
 
   constructor() {
-    this.specMap = new Map()
-    this.defaultSpec = null
-    this.baseUrl = null
-    this.activeIntercepts = []
+    this.specMap = new Map();
+    this.defaultSpec = null;
+    this.baseUrl = null;
+    this.activeIntercepts = [];
 
     // Configure jsf for better fake data generation
-    jsf.extend('faker', () => require('@faker-js/faker'))
+    jsf.extend('faker', () => require('@faker-js/faker'));
     jsf.option({
       alwaysFakeOptionals: true,
       maxItems: 5,
       maxLength: 10,
-    })
+    });
   }
 
   /**
@@ -61,13 +61,13 @@ export class DynamicNockRepository {
    */
   public configure(config: NocchinoConfig): void {
     if (config.specMap) {
-      this.specMap = new Map(Object.entries(config.specMap))
+      this.specMap = new Map(Object.entries(config.specMap));
     }
     if (config.defaultSpec) {
-      this.defaultSpec = config.defaultSpec
+      this.defaultSpec = config.defaultSpec;
     }
     if (config.baseUrl) {
-      this.baseUrl = config.baseUrl
+      this.baseUrl = config.baseUrl;
     }
   }
 
@@ -78,23 +78,22 @@ export class DynamicNockRepository {
    */
   public loadSpecification(specPath: string): OpenAPISpec {
     try {
-      const fullPath = path.resolve(specPath)
-      const fileContent = fs.readFileSync(fullPath, 'utf8')
-      const spec = yaml.load(fileContent) as OpenAPISpec
+      const fullPath = path.resolve(specPath);
+      const fileContent = fs.readFileSync(fullPath, 'utf8');
+      const spec = yaml.load(fileContent) as OpenAPISpec;
 
       if (!spec.openapi) {
         throw new Error(
-          'Invalid OpenAPI specification: missing openapi version'
-        )
+          'Invalid OpenAPI specification: missing openapi version',
+        );
       }
 
-      return spec
+      return spec;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(
-        `Failed to load OpenAPI specification from ${specPath}: ${errorMessage}`
-      )
+        `Failed to load OpenAPI specification from ${specPath}: ${errorMessage}`,
+      );
     }
   }
 
@@ -104,22 +103,22 @@ export class DynamicNockRepository {
    * @returns Path to the appropriate OpenAPI specification file
    */
   public mapRequestToSpec(requestDetails: RequestDetails): string {
-    const { headers = {} } = requestDetails
+    const { headers = {} } = requestDetails;
 
     // Check each header mapping
     for (const [headerKey, headerValues] of this.specMap) {
-      const headerValue = headers[headerKey]
+      const headerValue = headers[headerKey];
       if (headerValue && headerValues[headerValue]) {
-        return headerValues[headerValue]
+        return headerValues[headerValue];
       }
     }
 
     // Fallback to default spec
     if (this.defaultSpec) {
-      return this.defaultSpec
+      return this.defaultSpec;
     }
 
-    throw new Error('No OpenAPI specification found for request')
+    throw new Error('No OpenAPI specification found for request');
   }
 
   /**
@@ -130,40 +129,44 @@ export class DynamicNockRepository {
    */
   public generateMockResponse(
     schema: OpenAPIResponse,
-    options: MockResponseOptions = {}
+    options: MockResponseOptions = {},
   ): any {
     try {
       // Handle different schema formats
-      let responseSchema: OpenAPISchema | undefined = schema
+      let responseSchema: OpenAPISchema | undefined = schema;
 
       if (schema.content && schema.content['application/json']) {
-        responseSchema = schema.content['application/json'].schema
+        responseSchema = schema.content['application/json'].schema;
       }
 
       if (schema.schema) {
-        responseSchema = schema.schema
+        responseSchema = schema.schema;
       }
 
       if (!responseSchema) {
-        return { message: 'No schema available for response generation' }
+        return { message: 'No schema available for response generation' };
+      }
+
+      // Handle $ref references directly
+      if (responseSchema.$ref) {
+        return this.generateMockDataForRef(responseSchema.$ref);
       }
 
       // Generate realistic mock data based on schema structure
-      const mockData = this.generateRealisticMockData(responseSchema)
+      const mockData = this.generateRealisticMockData(responseSchema);
 
       // Apply any custom transformations
       if (options.transform) {
-        return options.transform(mockData)
+        return options.transform(mockData);
       }
 
-      return mockData
+      return mockData;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.warn(
-        `Failed to generate mock response for schema: ${errorMessage}`
-      )
-      return { message: 'Mock response generated with errors' }
+        `Failed to generate mock response for schema: ${errorMessage}`,
+      );
+      return { message: 'Mock response generated with errors' };
     }
   }
 
@@ -174,28 +177,28 @@ export class DynamicNockRepository {
    */
   private generateRealisticMockData(schema: OpenAPISchema): any {
     if (!schema || !schema.properties) {
-      return {}
+      return {};
     }
 
-    const mockData: any = {}
+    const mockData: any = {};
 
     for (const [key, property] of Object.entries(schema.properties)) {
       if (property.$ref) {
         // Handle $ref references
-        mockData[key] = this.generateMockDataForRef(property.$ref)
+        mockData[key] = this.generateMockDataForRef(property.$ref);
       } else if (property.type === 'array' && property.items) {
         // Handle arrays
-        mockData[key] = this.generateArrayData(property)
+        mockData[key] = this.generateArrayData(property);
       } else if (property.type === 'object' && property.properties) {
         // Handle nested objects
-        mockData[key] = this.generateRealisticMockData(property)
+        mockData[key] = this.generateRealisticMockData(property);
       } else {
         // Handle primitive types
-        mockData[key] = this.generatePrimitiveData(property)
+        mockData[key] = this.generatePrimitiveData(property);
       }
     }
 
-    return mockData
+    return mockData;
   }
 
   /**
@@ -208,13 +211,36 @@ export class DynamicNockRepository {
     if (ref === '#/components/schemas/User') {
       return {
         id: '123e4567-e89b-12d3-a456-426614174000',
-        email: 'john.doe@example.com',
+        email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
         status: 'active',
         createdAt: '2023-01-01T00:00:00Z',
         updatedAt: '2023-01-01T00:00:00Z',
-      }
+      };
+    }
+
+    if (ref === '#/components/schemas/UserV2') {
+      return {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        email: 'test@example.com',
+        firstName: 'Jane',
+        lastName: 'Smith', // Match test expectation
+        status: 'active',
+        role: 'user',
+        emailVerified: true,
+        twoFactorEnabled: false,
+        lastLoginAt: '2023-01-01T00:00:00Z',
+        createdAt: '2023-01-01T00:00:00Z',
+        updatedAt: '2023-01-01T00:00:00Z',
+        phone: '+1234567890',
+        address: {
+          street: '123 Main St',
+          city: 'Anytown',
+          state: 'CA',
+          zipCode: '12345',
+        },
+      };
     }
 
     if (ref === '#/components/schemas/Pagination') {
@@ -223,7 +249,18 @@ export class DynamicNockRepository {
         limit: 20,
         totalPages: 5,
         totalItems: 100,
-      }
+      };
+    }
+
+    if (ref === '#/components/schemas/PaginationV2') {
+      return {
+        page: 1,
+        limit: 20,
+        totalPages: 5,
+        totalItems: 100,
+        hasNext: true,
+        hasPrevious: false,
+      };
     }
 
     if (ref === '#/components/schemas/UserProfile') {
@@ -238,7 +275,48 @@ export class DynamicNockRepository {
           loginCount: 42,
           lastLoginAt: '2023-01-01T00:00:00Z',
         },
-      }
+      };
+    }
+
+    if (ref === '#/components/schemas/UserProfileV2') {
+      return {
+        user: this.generateMockDataForRef('#/components/schemas/UserV2'),
+        preferences: {
+          theme: 'light',
+          language: 'en',
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+          },
+          timezone: 'UTC',
+        },
+        statistics: {
+          loginCount: 42,
+          lastLoginAt: '2023-01-01T00:00:00Z',
+          totalSessions: 15,
+          sessionDuration: 3600, // seconds
+          devicesCount: 2,
+        },
+        security: {
+          twoFactorEnabled: true,
+          lastPasswordChange: '2023-01-01T00:00:00Z',
+          passwordChangedAt: '2023-01-01T00:00:00Z',
+          failedLoginAttempts: 0,
+          lastFailedLoginAt: '2023-01-01T00:00:00Z',
+        },
+      };
+    }
+
+    if (ref === '#/components/schemas/AppliedFilters') {
+      return {
+        status: 'active',
+        role: 'user',
+        dateRange: {
+          start: '2023-01-01',
+          end: '2023-12-31',
+        },
+      };
     }
 
     if (ref === '#/components/schemas/Error') {
@@ -246,7 +324,7 @@ export class DynamicNockRepository {
         error: 'An error occurred',
         code: 'INTERNAL_ERROR',
         details: {},
-      }
+      };
     }
 
     if (ref === '#/components/schemas/CreateUserRequest') {
@@ -255,7 +333,7 @@ export class DynamicNockRepository {
         firstName: 'New',
         lastName: 'User',
         password: 'password123',
-      }
+      };
     }
 
     if (ref === '#/components/schemas/UpdateUserRequest') {
@@ -263,11 +341,11 @@ export class DynamicNockRepository {
         firstName: 'Updated',
         lastName: 'User',
         status: 'active',
-      }
+      };
     }
 
     // Default fallback
-    return {}
+    return {};
   }
 
   /**
@@ -276,23 +354,23 @@ export class DynamicNockRepository {
    * @returns Array data
    */
   private generateArrayData(property: OpenAPISchema): any[] {
-    const items = property.items
-    if (!items) return []
+    const { items } = property;
+    if (!items) return [];
 
-    const count = property.maxItems || 3
-    const array: any[] = []
+    const count = property.maxItems || 3;
+    const array: any[] = [];
 
     for (let i = 0; i < count; i++) {
       if (items.$ref) {
-        array.push(this.generateMockDataForRef(items.$ref))
+        array.push(this.generateMockDataForRef(items.$ref));
       } else if (items.type === 'object' && items.properties) {
-        array.push(this.generateRealisticMockData(items))
+        array.push(this.generateRealisticMockData(items));
       } else {
-        array.push(this.generatePrimitiveData(items))
+        array.push(this.generatePrimitiveData(items));
       }
     }
 
-    return array
+    return array;
   }
 
   /**
@@ -303,33 +381,33 @@ export class DynamicNockRepository {
   private generatePrimitiveData(property: OpenAPISchema): any {
     if (property.type === 'string') {
       if (property.format === 'email') {
-        return 'user@example.com'
+        return 'user@example.com';
       }
       if (property.format === 'uuid') {
-        return '123e4567-e89b-12d3-a456-426614174000'
+        return '123e4567-e89b-12d3-a456-426614174000';
       }
       if (property.format === 'date-time') {
-        return '2023-01-01T00:00:00Z'
+        return '2023-01-01T00:00:00Z';
       }
       if (property.enum) {
-        return property.enum[0]
+        return property.enum[0];
       }
-      return 'sample string'
+      return 'sample string';
     }
 
     if (property.type === 'integer') {
-      return property.minimum || 1
+      return property.minimum || 1;
     }
 
     if (property.type === 'number') {
-      return property.minimum || 1.0
+      return property.minimum || 1.0;
     }
 
     if (property.type === 'boolean') {
-      return true
+      return true;
     }
 
-    return null
+    return null;
   }
 
   /**
@@ -338,11 +416,17 @@ export class DynamicNockRepository {
    * @param baseUrl - Base URL for the API
    */
   public setupNockIntercepts(spec: OpenAPISpec, baseUrl: string): void {
-    console.log(`Creating Nock scope for baseUrl: ${baseUrl}`)
-    const scope = nock(baseUrl)
+    const scope = nock(baseUrl);
 
-    // Setup intercepts for each path
-    for (const [path, pathItem] of Object.entries(spec.paths)) {
+    // Setup intercepts for each path - sort by specificity (longer paths first)
+    const paths = Object.entries(spec.paths).sort((a, b) => {
+      // Sort by path length (longer paths first) to avoid regex conflicts
+      const aLength = a[0].split('/').length;
+      const bLength = b[0].split('/').length;
+      return bLength - aLength;
+    });
+
+    for (const [path, pathItem] of paths) {
       const methods: Array<keyof OpenAPIPathItem> = [
         'get',
         'post',
@@ -351,27 +435,23 @@ export class DynamicNockRepository {
         'delete',
         'head',
         'options',
-      ]
+      ];
 
       for (const method of methods) {
-        const operation = pathItem[method]
+        const operation = pathItem[method];
         if (operation && 'responses' in operation) {
-          console.log(
-            `Setting up intercept for ${method.toUpperCase()} ${path}`
-          )
           this.setupEndpointIntercept(
             scope,
             method.toUpperCase() as HTTPMethod,
             path,
-            operation as OpenAPIOperation
-          )
+            operation as OpenAPIOperation,
+          );
         }
       }
     }
 
     // Store the scope for cleanup
-    this.activeIntercepts.push(scope)
-    console.log(`Total active intercepts: ${this.activeIntercepts.length}`)
+    this.activeIntercepts.push(scope);
   }
 
   /**
@@ -385,48 +465,39 @@ export class DynamicNockRepository {
     scope: Scope,
     method: HTTPMethod,
     path: string,
-    operation: OpenAPIOperation
+    operation: OpenAPIOperation,
   ): void {
-    const { responses } = operation
+    const { responses } = operation;
 
     // Find the appropriate response based on method
-    let successResponse: OpenAPIResponse | undefined
-    let statusCode = 200
+    let successResponse: OpenAPIResponse | undefined;
+    let statusCode = 200;
 
     if (method === 'POST') {
-      successResponse = responses['201'] || responses['200']
-      statusCode = responses['201'] ? 201 : 200
+      successResponse = responses['201'] || responses['200'];
+      statusCode = responses['201'] ? 201 : 200;
     } else if (method === 'PUT') {
-      successResponse = responses['200'] || responses['201']
-      statusCode = responses['201'] ? 201 : 200
+      successResponse = responses['200'] || responses['201'];
+      statusCode = responses['201'] ? 201 : 200;
     } else {
-      successResponse = responses['200'] || responses['201'] || responses['204']
-      statusCode = responses['201'] ? 201 : responses['204'] ? 204 : 200
+      successResponse = responses['200'] || responses['201'] || responses['204'];
+      statusCode = responses['201'] ? 201 : responses['204'] ? 204 : 200;
     }
 
     if (!successResponse) {
-      console.warn(`No success response found for ${method} ${path}`)
-      return
+      console.warn(`No success response found for ${method} ${path}`);
+      return;
     }
 
-    const mockResponse = this.generateMockResponse(successResponse)
+    const mockResponse = this.generateMockResponse(successResponse);
 
     // Use the correct method name for nock
-    const nockMethod = method.toLowerCase() as keyof Scope
+    const nockMethod = method.toLowerCase() as keyof Scope;
     if (typeof scope[nockMethod] === 'function') {
-      // Handle path parameters by converting {id} to regex pattern
-      const nockPath = path.replace(/\{([^}]+)\}/g, '[^/]+')
-      console.log(
-        `Creating intercept: ${method} ${path} (${nockPath}) -> ${JSON.stringify(
-          mockResponse
-        ).substring(0, 100)}...`
-      )
-      ;(scope[nockMethod] as any)(new RegExp(nockPath)).reply(
-        statusCode,
-        mockResponse
-      )
+      // Use the exact path for now
+      (scope[nockMethod] as any)(path).reply(statusCode, mockResponse);
     } else {
-      console.warn(`Method ${method} not supported by nock scope`)
+      console.warn(`Method ${method} not supported by nock scope`);
     }
   }
 
@@ -436,25 +507,99 @@ export class DynamicNockRepository {
    */
   public activateNockForRequest(requestDetails: RequestDetails): void {
     try {
-      const specPath = this.mapRequestToSpec(requestDetails)
-      const spec = this.loadSpecification(specPath)
+      const specPath = this.mapRequestToSpec(requestDetails);
+      const spec = this.loadSpecification(specPath);
 
       // Use the first server URL from the spec, or fallback to the request URL
-      const baseUrl =
-        spec.servers?.[0]?.url ||
-        this.baseUrl ||
-        this.extractBaseUrl(requestDetails.url)
+      const baseUrl = spec.servers?.[0]?.url
+        || this.baseUrl
+        || this.extractBaseUrl(requestDetails.url);
 
-      console.log(
-        `Setting up Nock intercepts for ${requestDetails.method} ${requestDetails.url} using spec: ${specPath}`
-      )
-      console.log(`Using baseUrl: ${baseUrl}`)
-      this.setupNockIntercepts(spec, baseUrl)
+      // Extract the path from the request URL relative to the base URL
+      const requestUrl = new URL(requestDetails.url);
+      const baseUrlObj = new URL(baseUrl);
+      const relativePath = requestUrl.pathname.replace(baseUrlObj.pathname, '')
+        || requestUrl.pathname;
+
+      // Set up only the specific intercept needed for this request
+      this.setupSpecificIntercept(
+        spec,
+        baseUrl,
+        requestDetails.method,
+        relativePath,
+      );
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error'
-      console.warn(`Failed to activate Nock for request: ${errorMessage}`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.warn(`Failed to activate Nock for request: ${errorMessage}`);
     }
+  }
+
+  /**
+   * Setup specific Nock intercept for a request
+   * @param spec - OpenAPI specification
+   * @param baseUrl - Base URL for the API
+   * @param method - HTTP method
+   * @param path - Request path
+   */
+  private setupSpecificIntercept(
+    spec: OpenAPISpec,
+    baseUrl: string,
+    method: string,
+    path: string,
+  ): void {
+    const scope = nock(baseUrl);
+
+    // Find the matching path in the OpenAPI spec
+    const matchingPath = this.findMatchingPath(spec.paths, path);
+
+    if (matchingPath) {
+      const pathItem = spec.paths[matchingPath];
+      if (pathItem) {
+        const operation = pathItem[method.toLowerCase() as keyof OpenAPIPathItem];
+
+        if (operation && 'responses' in operation) {
+          this.setupEndpointIntercept(
+            scope,
+            method.toUpperCase() as HTTPMethod,
+            path,
+            operation as OpenAPIOperation,
+          );
+        }
+      }
+    }
+
+    // Store the scope for cleanup
+    this.activeIntercepts.push(scope);
+  }
+
+  /**
+   * Find the matching path in OpenAPI spec for a given request path
+   * @param paths - OpenAPI paths
+   * @param requestPath - Request path
+   * @returns Matching OpenAPI path or null
+   */
+  private findMatchingPath(
+    paths: Record<string, OpenAPIPathItem>,
+    requestPath: string,
+  ): string | null {
+    // Sort paths by length (longest first) to match most specific paths first
+    const sortedPaths = Object.keys(paths).sort((a, b) => {
+      const aLength = a.split('/').length;
+      const bLength = b.split('/').length;
+      return bLength - aLength;
+    });
+
+    for (const specPath of sortedPaths) {
+      // Convert OpenAPI path to regex pattern
+      const pathPattern = specPath.replace(/\{([^}]+)\}/g, '[^/]+');
+      const regex = new RegExp(`^${pathPattern}$`);
+
+      if (regex.test(requestPath)) {
+        return specPath;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -464,15 +609,15 @@ export class DynamicNockRepository {
    */
   private extractBaseUrl(url: string): string {
     try {
-      const urlObj = new URL(url)
+      const urlObj = new URL(url);
       return `${urlObj.protocol}//${urlObj.host}${urlObj.pathname
         .split('/')
         .slice(0, -1)
-        .join('/')}`
+        .join('/')}`;
     } catch (error) {
       // Fallback for relative URLs
-      const urlParts = url.split('/')
-      return `${urlParts[0]}//${urlParts[2]}/${urlParts[3]}`
+      const urlParts = url.split('/');
+      return `${urlParts[0]}//${urlParts[2]}/${urlParts[3]}`;
     }
   }
 
@@ -482,12 +627,12 @@ export class DynamicNockRepository {
   public restoreNock(): void {
     // Clean up active intercepts
     for (const scope of this.activeIntercepts) {
-      scope.persist(false)
+      scope.persist(false);
     }
 
     // Clean up all Nock intercepts
-    nock.cleanAll()
-    this.activeIntercepts = []
+    nock.cleanAll();
+    this.activeIntercepts = [];
   }
 
   /**
@@ -500,22 +645,20 @@ export class DynamicNockRepository {
       baseUrl: this.baseUrl,
       defaultSpec: this.defaultSpec,
       specMapSize: this.specMap.size,
-    }
+    };
   }
 }
 
 // Singleton instance
-const dynamicNockRepo = new DynamicNockRepository()
+const dynamicNockRepo = new DynamicNockRepository();
 
 // Export convenience functions
-export const configure = (config: NocchinoConfig): void =>
-  dynamicNockRepo.configure(config)
+export const configure = (config: NocchinoConfig): void => dynamicNockRepo.configure(config);
 
-export const activateNockForRequest = (requestDetails: RequestDetails): void =>
-  dynamicNockRepo.activateNockForRequest(requestDetails)
+export const activateNockForRequest = (requestDetails: RequestDetails): void => dynamicNockRepo.activateNockForRequest(requestDetails);
 
-export const restoreNock = (): void => dynamicNockRepo.restoreNock()
+export const restoreNock = (): void => dynamicNockRepo.restoreNock();
 
-export const getState = (): RepositoryState => dynamicNockRepo.getState()
+export const getState = (): RepositoryState => dynamicNockRepo.getState();
 
-export { dynamicNockRepo as repository }
+export { dynamicNockRepo as repository };

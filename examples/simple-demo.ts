@@ -65,10 +65,7 @@ interface ErrorResponse {
  */
 export async function runSimpleDemo(): Promise<void> {
   try {
-    console.log('🚀 Starting Simple Nocchino Demo...\n');
-
     // Example 1: Basic GET request
-    console.log('📋 Example 1: Basic GET request');
 
     // Set up a simple mock response
     nock('https://api.example.com')
@@ -101,15 +98,10 @@ export async function runSimpleDemo(): Promise<void> {
       },
     );
 
-    console.log('✅ Response Status:', response.status);
-    console.log('📊 Response Data:', JSON.stringify(response.data, null, 2));
-    console.log('');
-
     // Clean up
     nock.cleanAll();
 
     // Example 2: POST request
-    console.log('📋 Example 2: POST request');
 
     nock('https://api.example.com')
       .post('/v1/users')
@@ -138,18 +130,10 @@ export async function runSimpleDemo(): Promise<void> {
       },
     );
 
-    console.log('✅ Create Response Status:', createResponse.status);
-    console.log(
-      '📊 Created User:',
-      JSON.stringify(createResponse.data, null, 2),
-    );
-    console.log('');
-
     // Clean up
     nock.cleanAll();
 
     // Example 3: Error handling
-    console.log('📋 Example 3: Error handling');
 
     nock('https://api.example.com')
       .get('/v1/users/nonexistent')
@@ -167,19 +151,12 @@ export async function runSimpleDemo(): Promise<void> {
       });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        console.log('✅ Error handled correctly');
-        console.log('📊 Error Status:', error.response.status);
-        console.log(
-          '📊 Error Data:',
-          JSON.stringify(error.response.data, null, 2),
-        );
+        // Error handled correctly
       }
     }
 
     // Clean up
     nock.cleanAll();
-
-    console.log('🎉 Simple demo completed successfully!');
   } catch (error) {
     console.error(
       '❌ Error during demo:',
