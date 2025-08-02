@@ -1,0 +1,605 @@
+openapi: 3.0.3
+info:
+  title: Products API v1
+  description: API for managing products and inventory
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+paths:
+  /products:
+    get:
+      summary: List all products
+      description: Retrieve a list of all products with optional filtering
+      operationId: listProducts
+      tags:
+        - Products
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of products per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: category
+          in: query
+          description: Filter products by category
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter products by status
+          required: false
+          schema:
+            type: string
+            enum: [active, inactive, out_of_stock]
+        - name: minPrice
+          in: query
+          description: Minimum price filter
+          required: false
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          description: Maximum price filter
+          required: false
+          schema:
+            type: number
+            minimum: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  total:
+                    type: integer
+                    description: Total number of products
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new product
+      description: Create a new product in the catalog
+      operationId: createProduct
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Product already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /products/{id}:
+    get:
+      summary: Get product by ID
+      description: Retrieve a specific product by its ID
+      operationId: getProductById
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update product
+      description: Update an existing product's information
+      operationId: updateProduct
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete product
+      description: Delete a product from the catalog
+      operationId: deleteProduct
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Product deleted successfully
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /products/{id}/inventory:
+    get:
+      summary: Get product inventory
+      description: Retrieve inventory information for a specific product
+      operationId: getProductInventory
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductInventory'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update product inventory
+      description: Update inventory levels for a specific product
+      operationId: updateProductInventory
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInventoryRequest'
+      responses:
+        '200':
+          description: Inventory updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductInventory'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /categories:
+    get:
+      summary: List all categories
+      description: Retrieve a list of all product categories
+      operationId: listCategories
+      tags:
+        - Categories
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique product identifier
+        name:
+          type: string
+          description: Product name
+        description:
+          type: string
+          description: Product description
+        price:
+          type: number
+          minimum: 0
+          description: Product price
+        currency:
+          type: string
+          default: 'USD'
+          description: Price currency
+        category:
+          type: string
+          description: Product category
+        status:
+          type: string
+          enum: [active, inactive, out_of_stock]
+          description: Product status
+        sku:
+          type: string
+          description: Stock keeping unit
+        barcode:
+          type: string
+          description: Product barcode
+        weight:
+          type: number
+          description: Product weight in grams
+        dimensions:
+          type: object
+          properties:
+            length:
+              type: number
+              description: Length in cm
+            width:
+              type: number
+              description: Width in cm
+            height:
+              type: number
+              description: Height in cm
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Product image URLs
+        tags:
+          type: array
+          items:
+            type: string
+          description: Product tags
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - name
+        - price
+        - category
+        - status
+        - sku
+        - createdAt
+        - updatedAt
+    CreateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Product name
+        description:
+          type: string
+          description: Product description
+        price:
+          type: number
+          minimum: 0
+          description: Product price
+        currency:
+          type: string
+          default: 'USD'
+          description: Price currency
+        category:
+          type: string
+          description: Product category
+        sku:
+          type: string
+          description: Stock keeping unit
+        barcode:
+          type: string
+          description: Product barcode
+        weight:
+          type: number
+          description: Product weight in grams
+        dimensions:
+          type: object
+          properties:
+            length:
+              type: number
+              description: Length in cm
+            width:
+              type: number
+              description: Width in cm
+            height:
+              type: number
+              description: Height in cm
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Product image URLs
+        tags:
+          type: array
+          items:
+            type: string
+          description: Product tags
+      required:
+        - name
+        - price
+        - category
+        - sku
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Product name
+        description:
+          type: string
+          description: Product description
+        price:
+          type: number
+          minimum: 0
+          description: Product price
+        currency:
+          type: string
+          description: Price currency
+        category:
+          type: string
+          description: Product category
+        status:
+          type: string
+          enum: [active, inactive, out_of_stock]
+          description: Product status
+        barcode:
+          type: string
+          description: Product barcode
+        weight:
+          type: number
+          description: Product weight in grams
+        dimensions:
+          type: object
+          properties:
+            length:
+              type: number
+              description: Length in cm
+            width:
+              type: number
+              description: Width in cm
+            height:
+              type: number
+              description: Height in cm
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Product image URLs
+        tags:
+          type: array
+          items:
+            type: string
+          description: Product tags
+    ProductInventory:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          description: Product ID
+        quantity:
+          type: integer
+          minimum: 0
+          description: Available quantity
+        reserved:
+          type: integer
+          minimum: 0
+          description: Reserved quantity
+        lowStockThreshold:
+          type: integer
+          minimum: 0
+          description: Low stock threshold
+        lastRestocked:
+          type: string
+          format: date-time
+          description: Last restock date
+        supplier:
+          type: string
+          description: Supplier information
+        location:
+          type: string
+          description: Storage location
+      required:
+        - productId
+        - quantity
+        - reserved
+        - lowStockThreshold
+    UpdateInventoryRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          minimum: 0
+          description: Available quantity
+        reserved:
+          type: integer
+          minimum: 0
+          description: Reserved quantity
+        lowStockThreshold:
+          type: integer
+          minimum: 0
+          description: Low stock threshold
+        supplier:
+          type: string
+          description: Supplier information
+        location:
+          type: string
+          description: Storage location
+      required:
+        - quantity
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Category ID
+        name:
+          type: string
+          description: Category name
+        description:
+          type: string
+          description: Category description
+        parentId:
+          type: string
+          format: uuid
+          description: Parent category ID
+        productCount:
+          type: integer
+          minimum: 0
+          description: Number of products in category
+      required:
+        - id
+        - name
+        - productCount
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+        limit:
+          type: integer
+          minimum: 1
+          description: Number of items per page
+        totalPages:
+          type: integer
+          minimum: 1
+          description: Total number of pages
+        totalItems:
+          type: integer
+          minimum: 0
+          description: Total number of items
+      required:
+        - page
+        - limit
+        - totalPages
+        - totalItems
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          description: Additional error details
+      required:
+        - error
+        - code

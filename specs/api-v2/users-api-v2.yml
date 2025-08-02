@@ -1,0 +1,560 @@
+openapi: 3.0.3
+info:
+  title: Users API v2
+  description: Enhanced API for managing users with additional features
+  version: 2.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+servers:
+  - url: https://api.example.com/v2
+    description: Production server
+  - url: https://staging-api.example.com/v2
+    description: Staging server
+paths:
+  /users:
+    get:
+      summary: List all users
+      description: Retrieve a list of all users with enhanced filtering and sorting
+      operationId: listUsersV2
+      tags:
+        - Users
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of users per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          description: Filter users by status
+          required: false
+          schema:
+            type: string
+            enum: [active, inactive, pending, suspended]
+        - name: role
+          in: query
+          description: Filter users by role
+          required: false
+          schema:
+            type: string
+            enum: [user, admin, moderator]
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, firstName, lastName, email]
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserV2'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationV2'
+                  total:
+                    type: integer
+                    description: Total number of users
+                  filters:
+                    $ref: '#/components/schemas/AppliedFilters'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+    post:
+      summary: Create a new user
+      description: Create a new user account with enhanced validation
+      operationId: createUserV2
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequestV2'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserV2'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      description: Retrieve a specific user by their ID with enhanced details
+      operationId: getUserByIdV2
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+        - name: include
+          in: query
+          description: Include additional data
+          required: false
+          schema:
+            type: string
+            enum: [profile, preferences, statistics]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserV2'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+    put:
+      summary: Update user
+      description: Update an existing user's information with enhanced validation
+      operationId: updateUserV2
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequestV2'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserV2'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+    delete:
+      summary: Delete user
+      description: Delete a user account with confirmation
+      operationId: deleteUserV2
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+        - name: confirm
+          in: query
+          description: Confirmation flag
+          required: true
+          schema:
+            type: boolean
+      responses:
+        '204':
+          description: User deleted successfully
+        '400':
+          description: Confirmation required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+  /users/{id}/profile:
+    get:
+      summary: Get user profile
+      description: Retrieve detailed profile information for a user
+      operationId: getUserProfileV2
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileV2'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+  /users/bulk:
+    post:
+      summary: Bulk create users
+      description: Create multiple users in a single request
+      operationId: bulkCreateUsers
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                users:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CreateUserRequestV2'
+                  minItems: 1
+                  maxItems: 100
+      responses:
+        '201':
+          description: Users created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserV2'
+                  failed:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BulkError'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorV2'
+components:
+  schemas:
+    UserV2:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          description: User's email address
+        firstName:
+          type: string
+          description: User's first name
+        lastName:
+          type: string
+          description: User's last name
+        status:
+          type: string
+          enum: [active, inactive, pending, suspended]
+          description: User account status
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          description: User role
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        lastLoginAt:
+          type: string
+          format: date-time
+          description: Last login timestamp
+        emailVerified:
+          type: boolean
+          description: Email verification status
+        twoFactorEnabled:
+          type: boolean
+          description: Two-factor authentication status
+      required:
+        - id
+        - email
+        - firstName
+        - lastName
+        - status
+        - role
+        - createdAt
+        - updatedAt
+        - emailVerified
+        - twoFactorEnabled
+    CreateUserRequestV2:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+        firstName:
+          type: string
+          description: User's first name
+        lastName:
+          type: string
+          description: User's last name
+        password:
+          type: string
+          minLength: 8
+          description: User's password
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          default: user
+          description: User role
+        sendWelcomeEmail:
+          type: boolean
+          default: true
+          description: Send welcome email
+      required:
+        - email
+        - firstName
+        - lastName
+        - password
+    UpdateUserRequestV2:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: User's first name
+        lastName:
+          type: string
+          description: User's last name
+        status:
+          type: string
+          enum: [active, inactive, pending, suspended]
+          description: User account status
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          description: User role
+        emailVerified:
+          type: boolean
+          description: Email verification status
+        twoFactorEnabled:
+          type: boolean
+          description: Two-factor authentication status
+    UserProfileV2:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserV2'
+        preferences:
+          type: object
+          properties:
+            theme:
+              type: string
+              enum: [light, dark, auto]
+            language:
+              type: string
+              default: 'en'
+            notifications:
+              type: object
+              properties:
+                email:
+                  type: boolean
+                  default: true
+                push:
+                  type: boolean
+                  default: false
+                sms:
+                  type: boolean
+                  default: false
+            timezone:
+              type: string
+              default: 'UTC'
+        statistics:
+          type: object
+          properties:
+            loginCount:
+              type: integer
+              minimum: 0
+            lastLoginAt:
+              type: string
+              format: date-time
+            sessionDuration:
+              type: integer
+              description: Average session duration in minutes
+            devicesCount:
+              type: integer
+              description: Number of active devices
+        security:
+          type: object
+          properties:
+            passwordChangedAt:
+              type: string
+              format: date-time
+            failedLoginAttempts:
+              type: integer
+              minimum: 0
+            lastFailedLoginAt:
+              type: string
+              format: date-time
+      required:
+        - user
+        - preferences
+        - statistics
+        - security
+    PaginationV2:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+        limit:
+          type: integer
+          minimum: 1
+          description: Number of items per page
+        totalPages:
+          type: integer
+          minimum: 1
+          description: Total number of pages
+        totalItems:
+          type: integer
+          minimum: 0
+          description: Total number of items
+        hasNext:
+          type: boolean
+          description: Whether there is a next page
+        hasPrev:
+          type: boolean
+          description: Whether there is a previous page
+      required:
+        - page
+        - limit
+        - totalPages
+        - totalItems
+        - hasNext
+        - hasPrev
+    AppliedFilters:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, inactive, pending, suspended]
+        role:
+          type: string
+          enum: [user, admin, moderator]
+        sort:
+          type: string
+        order:
+          type: string
+          enum: [asc, desc]
+    ErrorV2:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        requestId:
+          type: string
+          description: Request identifier for tracking
+      required:
+        - error
+        - code
+        - timestamp
+        - requestId
+    BulkError:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: Index of the failed item
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+      required:
+        - index
+        - error
+        - code
