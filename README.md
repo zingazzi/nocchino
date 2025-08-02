@@ -664,7 +664,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/your-username/nocchino/issues)
 - **Documentation**: [Wiki](https://github.com/your-username/nocchino/wiki)
-- **Email**: support@nocchino.dev
+- **Email**: marco.zingoni@gmail.com
 
 ---
 
