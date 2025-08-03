@@ -28,10 +28,10 @@ export interface OpenAPISchema {
   type?: string
   format?: string
   description?: string
-  enum?: any[]
-  default?: any
-  example?: any
-  examples?: Record<string, any>
+  enum?: unknown[]
+  default?: unknown
+  example?: unknown
+  examples?: Record<string, unknown>
   nullable?: boolean
   readOnly?: boolean
   writeOnly?: boolean
@@ -122,55 +122,6 @@ export interface OpenAPISpec {
   components?: OpenAPIComponents
 }
 
-// Nocchino Configuration Types
-export interface NocchinoConfig {
-  baseUrl?: string
-  defaultSpec?: string
-  specMap?: Record<string, Record<string, string>>
-}
-
-export interface SpecMap {
-  [headerKey: string]: {
-    [headerValue: string]: string
-  }
-}
-
-export interface RequestDetails {
-  url: string
-  method: string
-  headers?: Record<string, string>
-}
-
-export interface MockResponseOptions {
-  transform?: (data: any) => any
-}
-
-export interface RepositoryState {
-  activeIntercepts: number
-  baseUrl: string | null
-  defaultSpec: string | null
-  specMapSize: number
-}
-
-export interface NocchinoError extends Error {
-  code?: string
-  details?: Record<string, any>
-}
-
-// Nock Types
-export interface NockScope {
-  persist(flag?: boolean): NockScope
-  [key: string]: any
-}
-
-// JSON Schema Faker Options
-export interface JSFOptions {
-  alwaysFakeOptionals?: boolean
-  useExamples?: boolean
-  maxItems?: number
-  maxLength?: number
-}
-
 // HTTP Types
 export type HTTPMethod =
   | 'GET'
@@ -182,3 +133,83 @@ export type HTTPMethod =
   | 'OPTIONS'
 
 export type HTTPStatusCode = 200 | 201 | 204 | 400 | 401 | 403 | 404 | 409 | 500
+
+// Nocchino Configuration Types
+export interface NocchinoConfig {
+  baseUrl?: string
+  defaultSpec: string // Now represents a folder path instead of a single file
+  specMap?: Record<string, Record<string, string>>
+}
+
+export interface SpecMap {
+  [headerKey: string]: {
+    [headerValue: string]: string
+  }
+}
+
+// Generic request types
+export interface RequestDetails<TBody = unknown, TResponse = unknown> {
+  url: string
+  method: string
+  headers?: Record<string, string>
+  body?: TBody
+  expectedResponse?: TResponse
+}
+
+// Generic API request interface
+export interface APIRequest<TBody = unknown> {
+  url: string
+  method: HTTPMethod
+  headers?: Record<string, string>
+  body?: TBody
+  params?: Record<string, string>
+}
+
+// Generic API response interface
+export interface APIResponse<TData = unknown> {
+  data: TData
+  status: HTTPStatusCode
+  headers?: Record<string, string>
+  message?: string
+}
+
+// Generic request handler
+export interface RequestHandler<TRequest = unknown, TResponse = unknown> {
+  handle(request: TRequest): Promise<TResponse>
+}
+
+// Generic mock response generator
+export interface MockResponseGenerator<TResponse = unknown> {
+  generate(options?: MockResponseOptions): TResponse
+}
+
+export interface MockResponseOptions {
+  transform?: (data: unknown) => unknown
+  requestBody?: unknown
+}
+
+export interface RepositoryState {
+  activeIntercepts: number
+  baseUrl: string | null
+  defaultSpec: string
+  specMapSize: number
+}
+
+export interface NocchinoError extends Error {
+  code?: string
+  details?: Record<string, unknown>
+}
+
+// Nock Types
+export interface NockScope {
+  persist(flag?: boolean): NockScope
+  [key: string]: unknown
+}
+
+// JSON Schema Faker Options
+export interface JSFOptions {
+  alwaysFakeOptionals?: boolean
+  useExamples?: boolean
+  maxItems?: number
+  maxLength?: number
+}

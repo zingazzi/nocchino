@@ -34,7 +34,7 @@ Nocchino is a powerful and flexible mocking solution for Node.js applications th
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/nocchino.git
+git clone https://github.com/zingazzi/nocchino.git
 cd nocchino
 
 # Install dependencies
@@ -384,6 +384,176 @@ const requestDetails: RequestDetails = {
   headers: { 'X-Api-Version': 'v1' },
 }
 ```
+
+## Generic Types Support
+
+Nocchino now supports generic types for type-safe API requests and responses. This provides better TypeScript integration and compile-time type checking.
+
+### Generic RequestDetails
+
+The `RequestDetails` interface now supports generic types for request body and response:
+
+```typescript
+interface RequestDetails<TBody = unknown, TResponse = unknown> {
+  url: string
+  method: string
+  headers?: Record<string, string>
+  body?: TBody
+  expectedResponse?: TResponse
+}
+```
+
+### Generic API Client
+
+Use the `GenericAPIClient` class for type-safe API requests:
+
+```typescript
+import { GenericAPIClient } from 'nocchino'
+
+// Define your types
+interface CreateResourceRequest {
+  name: string
+  description: string
+  type: string
+  metadata?: Record<string, unknown>
+}
+
+interface Resource {
+  id: string
+  name: string
+  description: string
+  type: string
+  status: string
+  createdAt: string
+  updatedAt: string
+  metadata?: Record<string, unknown>
+}
+
+// Create a type-safe API client
+const resourceClient = new GenericAPIClient<CreateResourceRequest, Resource>(
+  'https://api.example.com'
+)
+
+// Type-safe GET request
+const resourceResponse = await resourceClient.get<Resource>(
+  '/v1/resources/123',
+  {
+    'X-Api-Version': 'v1',
+  }
+)
+
+// Type-safe POST request
+const createResourceResponse = await resourceClient.post<
+  CreateResourceRequest,
+  Resource
+>(
+  '/v1/resources',
+  {
+    name: 'Example Resource',
+    description: 'A generic resource',
+    type: 'example',
+    metadata: { category: 'demo' },
+  },
+  {
+    'X-Api-Version': 'v1',
+  }
+)
+```
+
+### Specialized API Clients
+
+Create specialized API clients that extend the generic client:
+
+```typescript
+export class ResourceAPIClient extends GenericAPIClient<
+  CreateResourceRequest,
+  Resource
+> {
+  constructor(baseUrl: string) {
+    super(baseUrl, {
+      'Content-Type': 'application/json',
+      'X-Api-Version': 'v1',
+    })
+  }
+
+  public async createResource(
+    resourceData: CreateResourceRequest
+  ): Promise<APIResponse<Resource>> {
+    return this.post('/v1/resources', resourceData)
+  }
+
+  public async getResourceById(
+    resourceId: string
+  ): Promise<APIResponse<Resource>> {
+    return this.get<Resource>(`/v1/resources/${resourceId}`)
+  }
+}
+```
+
+### Generic Functions
+
+All Nocchino functions now support generic types:
+
+```typescript
+import { activateNockForRequest } from 'nocchino'
+
+// Type-safe request activation
+const requestDetails: RequestDetails<CreateResourceRequest, Resource> = {
+  url: 'https://api.example.com/v1/resources',
+  method: 'POST',
+  headers: { 'X-Api-Version': 'v1' },
+  body: {
+    name: 'Example Resource',
+    description: 'A generic resource',
+    type: 'example',
+  },
+}
+
+activateNockForRequest(requestDetails)
+```
+
+### Configuration
+
+The `defaultSpec` is now mandatory and points to a folder containing multiple OpenAPI specifications:
+
+```typescript
+import { configure } from 'nocchino'
+
+configure({
+  specMap: {
+    'X-Api-Version': {
+      v1: 'specs/api-v1/resources-api.yml',
+      v2: 'specs/api-v2/resources-api-v2.yml',
+    },
+  },
+  defaultSpec: 'specs', // Points to a folder containing all OpenAPI specs
+  baseUrl: 'https://api.example.com',
+})
+```
+
+**Folder Structure:**
+
+```
+specs/
+├── api-v1/
+│   ├── users-api.yml
+│   ├── products-api.yml
+│   └── orders-api.yml
+├── api-v2/
+│   ├── users-api-v2.yml
+│   └── products-api-v2.yml
+└── shared/
+    └── common-schemas.yml
+```
+
+**Features:**
+
+- **Automatic Loading**: All `.yml`, `.yaml`, and `.json` files in the folder are automatically loaded
+- **Smart Matching**: The system finds the best matching specification for each request
+- **Multiple APIs**: Support for multiple API versions and domains in a single folder
+- **Flexible Organization**: Organize specs by version, domain, or any structure you prefer
+
+See `examples/generic-client-example.ts` for a complete demonstration.
 
 ## 🏗️ Design Patterns
 
