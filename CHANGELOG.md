@@ -5,6 +5,134 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.1.0] - 2024-08-04
+
+### 🛠 Error Handling System
+
+#### Structured Error Management
+- **Added**: `ErrorHandler` singleton class for centralized error management
+- **Added**: `ErrorCode` enum with 15+ specific error types
+- **Added**: `ErrorSeverity` enum (LOW, MEDIUM, HIGH, CRITICAL)
+- **Added**: `ErrorCategory` enum for error classification
+- **Added**: `NocchinoError` interface with rich context information
+- **Added**: Error logging with configurable log size limits
+- **Added**: Error statistics and monitoring capabilities
+
+#### Error Recovery Strategies
+- **Added**: Automatic error categorization and handling
+- **Added**: Graceful handling of missing specifications
+- **Added**: Endpoint mismatch detection and recovery
+- **Added**: Memory error handling with automatic cleanup
+- **Added**: Configuration validation with detailed error messages
+- **Added**: Debug mode for enhanced error visibility
+
+#### Convenience Functions
+- **Added**: `createSpecNotFoundError()` for specification errors
+- **Added**: `createEndpointMismatchError()` for endpoint errors
+- **Added**: `createMockGenerationError()` for mock generation errors
+- **Added**: `createValidationError()` for validation errors
+
+### 🔍 Comprehensive Debugging System
+
+#### Multi-Level Logging
+- **Added**: `NocchinoDebugger` singleton class for centralized debugging
+- **Added**: `DebugLevel` enum (NONE, ERROR, WARN, INFO, DEBUG, TRACE)
+- **Added**: `DebugCategory` enum for categorized logging
+- **Added**: Configurable log filtering by level and category
+- **Added**: Log size management with automatic cleanup
+
+#### Performance Monitoring
+- **Added**: Request count and average response time tracking
+- **Added**: Memory usage monitoring with detailed metrics
+- **Added**: Specification loading time tracking
+- **Added**: Nock setup time monitoring
+- **Added**: Performance metrics collection and reporting
+
+#### Request Tracking
+- **Added**: Individual request lifecycle tracking
+- **Added**: Request completion status monitoring
+- **Added**: Endpoint and specification matching tracking
+- **Added**: Error tracking within requests
+- **Added**: Request duration and performance metrics
+
+#### Debug Sessions
+- **Added**: Session-based debugging with isolated contexts
+- **Added**: Session duration and metrics tracking
+- **Added**: Multiple session management
+- **Added**: Session-specific logging and monitoring
+
+#### Convenience Functions
+- **Added**: `debugRequest()` for request debugging
+- **Added**: `debugSpecification()` for specification debugging
+- **Added**: `debugEndpoint()` for endpoint debugging
+- **Added**: `debugError()` for error debugging
+- **Added**: `debugPerformance()` for performance debugging
+
+### 🔧 Integration & Architecture
+
+#### Core Integration
+- **Enhanced**: `DynamicNockRepository` with error handling integration
+- **Added**: Automatic error logging during initialization
+- **Added**: Debug logging for endpoint configuration
+- **Added**: Error context preservation throughout the system
+- **Enhanced**: Configuration validation with detailed error reporting
+
+#### Type Safety
+- **Added**: Comprehensive TypeScript types for all new features
+- **Enhanced**: Error context interfaces with optional properties
+- **Added**: Debug session and log interfaces
+- **Added**: Performance metrics interfaces
+- **Enhanced**: Request tracking interfaces
+
+### 🧪 Testing & Documentation
+
+#### Test Coverage
+- **Added**: `tests/error-handling.test.ts` with comprehensive error handling tests
+- **Added**: `tests/debugger.test.ts` with complete debugging system tests
+- **Added**: Error recovery strategy tests
+- **Added**: Debug session management tests
+- **Added**: Performance monitoring tests
+- **Added**: Integration tests with error handling and debugging
+
+#### Documentation
+- **Added**: `examples/error-handling-example.ts` with practical usage examples
+- **Added**: `examples/debugger-example.ts` with debugging system examples
+- **Enhanced**: README.md with error handling and debugging sections
+- **Added**: Comprehensive API documentation for new features
+
+### 📁 File Structure Changes
+
+#### New Files
+- **Added**: `src/utils/errorHandler.ts` - Complete error handling system
+- **Added**: `src/utils/debugger.ts` - Comprehensive debugging system
+- **Added**: `tests/error-handling.test.ts` - Error handling test suite
+- **Added**: `tests/debugger.test.ts` - Debugging system test suite
+- **Added**: `examples/error-handling-example.ts` - Error handling examples
+- **Added**: `examples/debugger-example.ts` - Debugging system examples
+
+#### Updated Files
+- **Enhanced**: `src/utils/dynamicNock.ts` - Integrated error handling and debugging
+- **Enhanced**: `src/index.ts` - Exported new error handling and debugging components
+- **Enhanced**: `src/types/index.ts` - Updated error interfaces
+- **Enhanced**: `README.md` - Added error handling and debugging documentation
+- **Updated**: `CHANGELOG.md` - Added v1.1.0 release notes
+
+### 🔧 Technical Improvements
+
+#### Code Quality
+- **Enhanced**: Error handling with structured error types
+- **Added**: Comprehensive logging with multiple levels and categories
+- **Improved**: Performance monitoring and metrics collection
+- **Enhanced**: Type safety with detailed interfaces
+- **Added**: Debug session management for isolated debugging contexts
+
+#### Developer Experience
+- **Added**: Rich error context with timestamps and additional information
+- **Added**: Debug report generation for comprehensive system overview
+- **Added**: Performance metrics visualization
+- **Enhanced**: Error recovery strategies for graceful failure handling
+- **Added**: Convenience functions for quick debugging and error handling
+
 ## [v1.0.0] - 2024-01-XX
 
 ### 🎯 Major Features
