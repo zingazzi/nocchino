@@ -15,6 +15,19 @@ export {
   DynamicNockRepository,
 } from './utils/dynamicNock';
 
+// Export error handling
+export {
+  ErrorHandler,
+  ErrorCode,
+  ErrorSeverity,
+  ErrorCategory,
+  errorHandler,
+  createSpecNotFoundError,
+  createEndpointMismatchError,
+  createMockGenerationError,
+  createValidationError,
+} from './utils/errorHandler';
+
 // Export types
 export type {
   OpenAPISpec,
@@ -38,6 +51,11 @@ export type {
   HTTPMethod,
   HTTPStatusCode,
 } from './types';
+
+// Export error handling types
+export type {
+  ErrorContext,
+} from './utils/errorHandler';
 
 // Export version information
 export const VERSION = '1.0.0';
