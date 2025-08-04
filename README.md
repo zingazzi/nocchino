@@ -17,6 +17,8 @@ Nocchino is a powerful and flexible multi-endpoint mocking solution for Node.js 
 - **Version Prefix Handling**: Supports `/v1/`, `/v2/` prefixes in URLs
 - **Type Safety**: Built-in TypeScript support with full type definitions
 - **Flexible Configuration**: Easy setup with customizable endpoint mapping
+- **Advanced Error Handling**: Structured error management with recovery strategies
+- **Comprehensive Debugging**: Multi-level logging, performance monitoring, and request tracking
 
 ## 📋 Table of Contents
 
@@ -465,6 +467,138 @@ Get the current state of the repository.
 **Returns:**
 
 - `RepositoryState`: Current repository state
+
+## 🛠 Error Handling & Debugging
+
+Nocchino provides comprehensive error handling and debugging capabilities to help you troubleshoot and monitor your API mocking setup.
+
+### Error Handling System
+
+The error handling system provides structured error management with recovery strategies:
+
+```typescript
+import {
+  ErrorHandler,
+  ErrorCode,
+  ErrorSeverity,
+  errorHandler,
+  createSpecNotFoundError,
+  createEndpointMismatchError,
+} from 'nocchino'
+
+// Enable debug mode for detailed error logging
+errorHandler.setDebugMode(true)
+
+// Handle specific error types
+try {
+  activateNockForRequest({
+    url: 'https://api.example.com/v1/users',
+    method: 'GET',
+  })
+} catch (error) {
+  if (error.code === ErrorCode.SPEC_NOT_FOUND) {
+    console.warn('No specification found for request')
+  } else if (error.code === ErrorCode.ENDPOINT_MISMATCH) {
+    console.warn('No matching endpoint found')
+  }
+}
+
+// Get error statistics
+const stats = errorHandler.getErrorStats()
+console.log('Error statistics:', stats)
+
+// Get recent errors
+const recentErrors = errorHandler.getRecentErrors(10)
+console.log('Recent errors:', recentErrors)
+```
+
+### Debugging System
+
+The debugging system provides multi-level logging, performance monitoring, and request tracking:
+
+```typescript
+import {
+  NocchinoDebugger,
+  DebugLevel,
+  DebugCategory,
+  nocchinoDebugger,
+  debugRequest,
+  debugSpecification,
+  debugEndpoint,
+  debugError,
+  debugPerformance,
+} from 'nocchino'
+
+// Configure debugger
+nocchinoDebugger.configure({
+  level: DebugLevel.DEBUG,
+  categories: [DebugCategory.REQUEST, DebugCategory.ERROR],
+  enablePerformanceMonitoring: true,
+  enableMemoryMonitoring: true,
+  enableRequestTracking: true,
+})
+
+// Start a debug session
+nocchinoDebugger.startSession()
+
+// Debug request details
+debugRequest({
+  url: 'https://api.example.com/v1/users',
+  method: 'GET',
+  headers: { Authorization: 'Bearer token' },
+})
+
+// Debug specification loading
+debugSpecification({
+  title: 'Users API',
+  version: '1.0.0',
+  paths: 5,
+})
+
+// Debug endpoint configuration
+debugEndpoint({
+  baseUrl: 'https://api.example.com',
+  specs: ['specs/api-v1', 'specs/api-v2'],
+})
+
+// Debug errors
+debugError(new Error('Test error'), { context: 'test' })
+
+// Debug performance
+debugPerformance('test operation', { duration: 150 })
+
+// Get performance metrics
+const metrics = nocchinoDebugger.getPerformanceMetrics()
+console.log('Performance metrics:', metrics)
+
+// Generate debug report
+const report = nocchinoDebugger.generateReport()
+console.log('Debug report:', report)
+
+// End debug session
+nocchinoDebugger.endSession()
+```
+
+### Debug Levels
+
+- **NONE**: No logging
+- **ERROR**: Only error messages
+- **WARN**: Warning and error messages
+- **INFO**: Info, warning, and error messages
+- **DEBUG**: Debug, info, warning, and error messages
+- **TRACE**: All messages including trace
+
+### Debug Categories
+
+- **CONFIGURATION**: Configuration-related logs
+- **SPECIFICATION**: OpenAPI specification logs
+- **REQUEST**: Request tracking logs
+- **RESPONSE**: Response handling logs
+- **PERFORMANCE**: Performance monitoring logs
+- **MEMORY**: Memory usage logs
+- **NOCK**: Nock setup and intercept logs
+- **ERROR**: Error handling logs
+- **SYSTEM**: System-level logs
 
 ## 📝 Type Definitions
 
