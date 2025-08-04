@@ -1,22 +1,22 @@
 # Nocchino 🎯
 
-**Dynamic OpenAPI-based Nock Repository for Node.js Testing**
+**Multi-Endpoint OpenAPI-based Nock Repository for Node.js Testing**
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Nock](https://img.shields.io/badge/Nock-13.5.4+-orange.svg)](https://github.com/nock/nock)
 
-Nocchino is a powerful and flexible mocking solution for Node.js applications that leverages OpenAPI specifications to dynamically generate mock responses. It eliminates the need for manual Nock intercepts in test files, providing a centralized, maintainable, and scalable testing environment.
+Nocchino is a powerful and flexible multi-endpoint mocking solution for Node.js applications that leverages OpenAPI specifications to create mock responses. It eliminates the need for manual Nock intercepts in test files, providing a centralized, maintainable, and scalable testing environment for multiple APIs.
 
 ## 🚀 Features
 
-- **Dynamic OpenAPI Integration**: Automatically generates mock responses based on OpenAPI specifications
-- **Version-based Routing**: Support for multiple API versions through header-based mapping
-- **Environment-aware**: Different mock configurations for staging, production, and other environments
-- **Comprehensive Testing**: Full test coverage with Jest integration
+- **Multi-Endpoint Support**: Test against multiple APIs simultaneously
+- **OpenAPI-Based Mocking**: Uses actual OpenAPI specifications only (no preset schemas)
+- **Smart Path Matching**: Automatic endpoint and specification matching
+- **Version Prefix Handling**: Supports `/v1/`, `/v2/` prefixes in URLs
 - **Type Safety**: Built-in TypeScript support with full type definitions
-- **Flexible Configuration**: Easy setup with customizable mapping strategies
+- **Flexible Configuration**: Easy setup with customizable endpoint mapping
 
 ## 📋 Table of Contents
 
@@ -59,22 +59,53 @@ npm test
 
 ## 🚀 Quick Start
 
-### 1. Basic Setup
+### 1. Basic Setup (Single Endpoint)
 
 ```typescript
 import { configure, activateNockForRequest, restoreNock } from 'nocchino'
 
-// Configure Nocchino
+// Configure Nocchino for a single endpoint
 configure({
-  baseUrl: 'https://api.example.com',
-  defaultSpec: 'specs/api-v1/users-api.yml',
+  endpoints: [
+    {
+      baseUrl: 'https://api.example.com',
+      specs: ['specs/api-v1', 'specs/api-v2/users-api-v2.yml'],
+    },
+  ],
   specMap: {
     'X-Api-Version': {
-      v1: 'specs/api-v1/users-api.yml',
-      v2: 'specs/api-v2/users-api-v2.yml',
+      v1: 'specs/api-v1',
+      v2: 'specs/api-v2',
     },
   },
 })
+```
+
+### 2. Multi-Endpoint Setup
+
+```typescript
+import { initialize, activateNockForRequest, restoreNock } from 'nocchino'
+
+// Configure multiple endpoints for different APIs
+const endpoints = [
+  {
+    baseUrl: 'https://api.example.com',
+    specs: [
+      'specs/api-v1', // Folder containing OpenAPI specs
+      'specs/api-v2/users-api-v2.yml', // Single file
+    ],
+  },
+  {
+    baseUrl: 'https://api.example2.com',
+    specs: [
+      'specs/api-v2', // Another folder
+      'specs/api-v1/products-api.yml', // Another single file
+    ],
+  },
+]
+
+// Initialize with multiple endpoints
+initialize(endpoints)
 ```
 
 ### 2. Create OpenAPI Specifications
@@ -128,24 +159,36 @@ describe('User API Tests', () => {
 ### Configuration Options
 
 ```typescript
-import { NocchinoConfig } from 'nocchino'
+import { NocchinoConfig, NocchinoEndpoint } from 'nocchino'
 
 const config: NocchinoConfig = {
-  // Base URL for the API
-  baseUrl: 'https://api.example.com',
-
-  // Default OpenAPI specification file
-  defaultSpec: 'specs/api-v1/users-api.yml',
+  // Multiple endpoints with their respective OpenAPI specifications
+  endpoints: [
+    {
+      baseUrl: 'https://api.example.com',
+      specs: [
+        'specs/api-v1', // Folder containing multiple OpenAPI specs
+        'specs/api-v2/users-api-v2.yml', // Single file
+      ],
+    },
+    {
+      baseUrl: 'https://api.example2.com',
+      specs: [
+        'specs/api-v2', // Another folder
+        'specs/api-v1/products-api.yml', // Another single file
+      ],
+    },
+  ],
 
   // Header-based mapping for different API versions/environments
   specMap: {
     'X-Api-Version': {
-      v1: 'specs/api-v1/users-api.yml',
-      v2: 'specs/api-v2/users-api-v2.yml',
+      v1: 'specs/api-v1',
+      v2: 'specs/api-v2',
     },
     'X-Environment': {
-      staging: 'specs/api-v1/users-api.yml',
-      production: 'specs/api-v2/users-api-v2.yml',
+      staging: 'specs/api-v1',
+      production: 'specs/api-v2',
     },
   },
 }
@@ -250,6 +293,58 @@ describe('API Version Testing', () => {
 })
 ```
 
+### Multi-Endpoint Testing
+
+```typescript
+import { initialize, activateNockForRequest, restoreNock } from 'nocchino'
+import axios from 'axios'
+
+describe('Multi-Endpoint Testing', () => {
+  beforeEach(() => {
+    // Configure multiple endpoints
+    const endpoints = [
+      {
+        baseUrl: 'https://api.example.com',
+        specs: ['specs/api-v1', 'specs/api-v2'],
+      },
+      {
+        baseUrl: 'https://api.example2.com',
+        specs: ['specs/api-v2', 'specs/api-v1/products-api.yml'],
+      },
+    ]
+    initialize(endpoints)
+  })
+
+  afterEach(() => {
+    restoreNock()
+  })
+
+  test('should handle requests to different endpoints', async () => {
+    // Request to first endpoint
+    activateNockForRequest({
+      url: 'https://api.example.com/v1/users/123',
+      method: 'GET',
+    })
+
+    // Request to second endpoint
+    activateNockForRequest({
+      url: 'https://api.example2.com/v2/products/456',
+      method: 'POST',
+      body: { name: 'Test Product' },
+    })
+
+    // Both requests will be handled by their respective OpenAPI specs
+    const userResponse = await axios.get('https://api.example.com/v1/users/123')
+    const productResponse = await axios.post('https://api.example2.com/v2/products/456', {
+      name: 'Test Product',
+    })
+
+    expect(userResponse.status).toBe(200)
+    expect(productResponse.status).toBe(201)
+  })
+})
+```
+
 ### Environment-based Testing
 
 ```typescript
@@ -316,6 +411,16 @@ describe('Error Handling', () => {
 
 ### Core Functions
 
+#### `initialize(endpoints: NocchinoEndpoint[]): void`
+
+Initialize the Nocchino repository with multiple endpoints and their specifications.
+
+**Parameters:**
+
+- `endpoints` (NocchinoEndpoint[]): Array of endpoint configurations
+  - `baseUrl` (string): Base URL for the endpoint
+  - `specs` (string[]): Array of folder paths or file paths containing OpenAPI specifications
+
 #### `configure(config: NocchinoConfig): void`
 
 Configure the Nocchino repository with mapping rules and settings.
@@ -323,8 +428,7 @@ Configure the Nocchino repository with mapping rules and settings.
 **Parameters:**
 
 - `config` (NocchinoConfig): Configuration object
-  - `baseUrl` (string): Base URL for the API
-  - `defaultSpec` (string): Default OpenAPI specification file path
+  - `endpoints` (NocchinoEndpoint[]): Array of endpoint configurations
   - `specMap` (Object): Header-based mapping configuration
 
 #### `activateNockForRequest(requestDetails: RequestDetails): void`
@@ -365,6 +469,7 @@ const state = repository.getState()
 ```typescript
 import {
   NocchinoConfig,
+  NocchinoEndpoint,
   RequestDetails,
   RepositoryState,
   OpenAPISpec,
@@ -373,9 +478,25 @@ import {
 } from 'nocchino'
 
 // Use these types for better type safety
+const endpoints: NocchinoEndpoint[] = [
+  {
+    baseUrl: 'https://api.example.com',
+    specs: ['specs/api-v1', 'specs/api-v2'],
+  },
+  {
+    baseUrl: 'https://api.example2.com',
+    specs: ['specs/api-v2'],
+  },
+]
+
 const config: NocchinoConfig = {
-  baseUrl: 'https://api.example.com',
-  defaultSpec: 'specs/api-v1/users-api.yml',
+  endpoints,
+  specMap: {
+    'X-Api-Version': {
+      v1: 'specs/api-v1',
+      v2: 'specs/api-v2',
+    },
+  },
 }
 
 const requestDetails: RequestDetails = {
@@ -514,20 +635,28 @@ activateNockForRequest(requestDetails)
 
 ### Configuration
 
-The `defaultSpec` is now mandatory and points to a folder containing multiple OpenAPI specifications:
+The `endpoints` array is now mandatory and supports multiple endpoints with their respective OpenAPI specifications:
 
 ```typescript
 import { configure } from 'nocchino'
 
 configure({
+  endpoints: [
+    {
+      baseUrl: 'https://api.example.com',
+      specs: ['specs/api-v1', 'specs/api-v2'],
+    },
+    {
+      baseUrl: 'https://api.example2.com',
+      specs: ['specs/api-v2', 'specs/api-v1/products-api.yml'],
+    },
+  ],
   specMap: {
     'X-Api-Version': {
-      v1: 'specs/api-v1/resources-api.yml',
-      v2: 'specs/api-v2/resources-api-v2.yml',
+      v1: 'specs/api-v1',
+      v2: 'specs/api-v2',
     },
   },
-  defaultSpec: 'specs', // Points to a folder containing all OpenAPI specs
-  baseUrl: 'https://api.example.com',
 })
 ```
 
@@ -546,12 +675,27 @@ specs/
     └── common-schemas.yml
 ```
 
+**Multi-Endpoint Structure:**
+
+```
+specs/
+├── api-v1/                    # For https://api.example.com
+│   ├── users-api.yml
+│   └── products-api.yml
+├── api-v2/                    # For https://api.example2.com
+│   ├── users-api-v2.yml
+│   └── products-api-v2.yml
+└── shared/                    # Shared across endpoints
+    └── common-schemas.yml
+```
+
 **Features:**
 
-- **Automatic Loading**: All `.yml`, `.yaml`, and `.json` files in the folder are automatically loaded
+- **Automatic Loading**: All `.yml`, `.yaml`, and `.json` files in folders are automatically loaded
 - **Smart Matching**: The system finds the best matching specification for each request
-- **Multiple APIs**: Support for multiple API versions and domains in a single folder
+- **Multiple Endpoints**: Support for multiple API endpoints in the same test suite
 - **Flexible Organization**: Organize specs by version, domain, or any structure you prefer
+- **Multi-Domain Testing**: Test against different APIs simultaneously (e.g., `api.example.com` and `api.example2.com`)
 
 See `examples/generic-client-example.ts` for a complete demonstration.
 
@@ -612,36 +756,50 @@ components:
 ### 2. Test Organization
 
 ```typescript
-// Good: Organized test structure
-describe('User API', () => {
-  describe('v1 API', () => {
-    beforeEach(() => {
-      configure({
-        defaultSpec: 'specs/api-v1/users-api.yml',
+// Good: Organized test structure with multiple endpoints
+describe('Multi-Endpoint API Testing', () => {
+  beforeEach(() => {
+    const endpoints = [
+      {
+        baseUrl: 'https://api.example.com',
+        specs: ['specs/api-v1', 'specs/api-v2'],
+      },
+      {
+        baseUrl: 'https://api.example2.com',
+        specs: ['specs/api-v2'],
+      },
+    ]
+    initialize(endpoints)
+  })
+
+  afterEach(() => {
+    restoreNock()
+  })
+
+  describe('User API (api.example.com)', () => {
+    test('should create user with v1 API', async () => {
+      activateNockForRequest({
+        url: 'https://api.example.com/v1/users',
+        method: 'POST',
       })
+      // Test implementation
     })
 
-    afterEach(() => {
-      restoreNock()
-    })
-
-    test('should create user', async () => {
+    test('should create user with v2 API', async () => {
+      activateNockForRequest({
+        url: 'https://api.example.com/v2/users',
+        method: 'POST',
+      })
       // Test implementation
     })
   })
 
-  describe('v2 API', () => {
-    beforeEach(() => {
-      configure({
-        defaultSpec: 'specs/api-v2/users-api-v2.yml',
+  describe('Product API (api.example2.com)', () => {
+    test('should create product', async () => {
+      activateNockForRequest({
+        url: 'https://api.example2.com/v2/products',
+        method: 'POST',
       })
-    })
-
-    afterEach(() => {
-      restoreNock()
-    })
-
-    test('should create user with enhanced features', async () => {
       // Test implementation
     })
   })
@@ -678,14 +836,22 @@ test('should handle API errors gracefully', async () => {
 ### 4. Configuration Management
 
 ```typescript
-// Good: Centralized configuration
+// Good: Centralized configuration with multiple endpoints
 const config: NocchinoConfig = {
-  baseUrl: process.env.API_BASE_URL || 'https://api.example.com',
-  defaultSpec: 'specs/api-v1/users-api.yml',
+  endpoints: [
+    {
+      baseUrl: process.env.API_BASE_URL || 'https://api.example.com',
+      specs: ['specs/api-v1', 'specs/api-v2'],
+    },
+    {
+      baseUrl: process.env.API2_BASE_URL || 'https://api.example2.com',
+      specs: ['specs/api-v2', 'specs/api-v1/products-api.yml'],
+    },
+  ],
   specMap: {
     'X-Api-Version': {
-      v1: 'specs/api-v1/users-api.yml',
-      v2: 'specs/api-v2/users-api-v2.yml',
+      v1: 'specs/api-v1',
+      v2: 'specs/api-v2',
     },
   },
 }

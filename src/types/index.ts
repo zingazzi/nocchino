@@ -135,9 +135,13 @@ export type HTTPMethod =
 export type HTTPStatusCode = 200 | 201 | 204 | 400 | 401 | 403 | 404 | 409 | 500
 
 // Nocchino Configuration Types
+export interface NocchinoEndpoint {
+  baseUrl: string
+  specs: string[] // Array of folder paths or file paths
+}
+
 export interface NocchinoConfig {
-  baseUrl?: string
-  defaultSpec: string // Now represents a folder path instead of a single file
+  endpoints: NocchinoEndpoint[]
   specMap?: Record<string, Record<string, string>>
 }
 
@@ -190,8 +194,7 @@ export interface MockResponseOptions {
 
 export interface RepositoryState {
   activeIntercepts: number
-  baseUrl: string | null
-  defaultSpec: string
+  endpoints: NocchinoEndpoint[]
   specMapSize: number
 }
 
