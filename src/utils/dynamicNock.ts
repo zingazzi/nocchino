@@ -19,6 +19,18 @@ import type {
   OpenAPISchema,
 } from '../types';
 
+import {
+  debugEndpoint,
+  debugError,
+} from './debugger';
+import {
+  ErrorCode,
+  ErrorSeverity,
+  errorHandler,
+  createSpecNotFoundError,
+  createEndpointMismatchError,
+} from './errorHandler';
+
 /**
  * Dynamic Nock Repository for OpenAPI-based HTTP request interception
  * Supports loading multiple OpenAPI specifications from multiple endpoints
@@ -57,13 +69,31 @@ export class DynamicNockRepository {
    * @param endpoints - Array of endpoint configurations
    */
   public initialize(endpoints: NocchinoEndpoint[]): void {
-    this.endpoints = endpoints;
-    this.loadedSpecs.clear();
-    this.endpointSpecs.clear();
+    try {
+      // Validate configuration
+      errorHandler.validateConfiguration(endpoints);
 
-    // Load all OpenAPI specifications for each endpoint
-    for (const endpoint of endpoints) {
-      this.loadEndpointSpecifications(endpoint);
+      this.endpoints = endpoints;
+      this.loadedSpecs.clear();
+      this.endpointSpecs.clear();
+
+      // Debug endpoint configuration
+      endpoints.forEach((endpoint) => {
+        debugEndpoint(endpoint);
+        this.loadEndpointSpecifications(endpoint);
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        debugError(error, { endpoints });
+        throw errorHandler.createError(
+          ErrorCode.INVALID_CONFIG,
+          `Failed to initialize repository: ${error.message}`,
+          { additionalInfo: { endpoints } },
+          ErrorSeverity.HIGH,
+          false,
+        );
+      }
+      throw error;
     }
   }
 
@@ -178,16 +208,24 @@ export class DynamicNockRepository {
       const spec = yaml.load(fileContent) as OpenAPISpec;
 
       if (!spec.openapi) {
-        throw new Error(
+        throw errorHandler.createError(
+          ErrorCode.INVALID_SPEC_FORMAT,
           'Invalid OpenAPI specification: missing openapi version',
+          { filePath: specPath },
+          ErrorSeverity.HIGH,
+          false,
         );
       }
 
       return spec;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(
+      throw errorHandler.createError(
+        ErrorCode.SPEC_LOAD_FAILED,
         `Failed to load OpenAPI specification from ${specPath}: ${errorMessage}`,
+        { filePath: specPath },
+        ErrorSeverity.MEDIUM,
+        true,
       );
     }
   }
@@ -226,18 +264,33 @@ export class DynamicNockRepository {
     // Find the matching endpoint
     const endpoint = this.findMatchingEndpoint(url);
     if (!endpoint) {
+      // Log endpoint mismatch for debugging
+      const availableEndpoints = this.endpoints.map((ep) => ep.baseUrl);
+      errorHandler.handleError(
+        createEndpointMismatchError(url, availableEndpoints, {
+          requestDetails,
+          method,
+        }),
+      );
       return null;
     }
 
     const endpointSpecs = this.endpointSpecs.get(endpoint.baseUrl);
     if (!endpointSpecs) {
+      errorHandler.handleError(
+        createSpecNotFoundError(url, {
+          requestDetails,
+          endpoint,
+          method,
+        }),
+      );
       return null;
     }
 
     let bestMatch: OpenAPISpec | null = null;
     let bestScore = 0;
 
-    for (const [, spec] of endpointSpecs) {
+    Array.from(endpointSpecs.values()).forEach((spec) => {
       // Get the base URL from the spec
       const baseUrl = spec.servers?.[0]?.url || endpoint.baseUrl;
       const baseUrlObj = new URL(baseUrl);
@@ -253,7 +306,7 @@ export class DynamicNockRepository {
         bestScore = score;
         bestMatch = spec;
       }
-    }
+    });
 
     return bestMatch;
   }

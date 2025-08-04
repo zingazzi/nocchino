@@ -271,8 +271,22 @@ export interface RepositoryState {
 }
 
 export interface NocchinoError extends Error {
-  code?: string
-  details?: Record<string, unknown>
+  code: string
+  severity: string
+  context: {
+    requestDetails?: RequestDetails
+    endpoint?: NocchinoEndpoint
+    spec?: OpenAPISpec
+    filePath?: string
+    method?: string
+    url?: string
+    timestamp: Date
+    stackTrace?: string
+    additionalInfo?: Record<string, unknown>
+  }
+  recoverable: boolean
+  retryCount?: number
+  maxRetries?: number
 }
 
 // Nock Types
