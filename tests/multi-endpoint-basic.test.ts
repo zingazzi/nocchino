@@ -48,10 +48,14 @@ describe('Multi-Endpoint Basic Tests', () => {
   test('should handle empty endpoints array', () => {
     const endpoints: NocchinoEndpoint[] = [];
 
-    initialize(endpoints);
+    expect(() => {
+      initialize(endpoints);
+    }).toThrow();
 
-    const state = getState();
-    expect(state.endpoints).toHaveLength(0);
+    // Should throw an error for empty endpoints array
+    expect(() => {
+      initialize(endpoints);
+    }).toThrow('At least one endpoint must be configured');
   });
 
   test('should load specifications from folders and files', () => {
