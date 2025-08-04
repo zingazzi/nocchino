@@ -85,8 +85,11 @@ export enum ErrorCategory {
 // Error Handler Class
 export class ErrorHandler {
   private static instance: ErrorHandler;
+
   private errorLog: NocchinoError[] = [];
+
   private maxLogSize = 1000;
+
   private debugMode = false;
 
   private constructor() {}
@@ -106,14 +109,14 @@ export class ErrorHandler {
     message: string,
     context: Partial<ErrorContext> = {},
     severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-    recoverable: boolean = true
+    recoverable: boolean = true,
   ): NocchinoError {
     const error = new Error(message) as NocchinoError;
     error.code = code;
     error.severity = severity;
     error.context = {
       timestamp: new Date(),
-      ...context
+      ...context,
     };
     error.recoverable = recoverable;
     error.name = 'NocchinoError';
@@ -138,7 +141,7 @@ export class ErrorHandler {
       console.error(`[Nocchino Error] ${error.code}: ${error.message}`, {
         severity: error.severity,
         context: error.context,
-        recoverable: error.recoverable
+        recoverable: error.recoverable,
       });
     }
   }
@@ -264,7 +267,7 @@ export class ErrorHandler {
    */
   private handleMockGenerationFailed(_error: NocchinoError): void {
     if (this.debugMode) {
-      console.warn(`[Nocchino Warning] Mock generation failed, using fallback response`);
+      console.warn('[Nocchino Warning] Mock generation failed, using fallback response');
     }
   }
 
@@ -297,7 +300,7 @@ export class ErrorHandler {
         'Endpoints must be an array',
         {},
         ErrorSeverity.HIGH,
-        false
+        false,
       );
     }
 
@@ -307,7 +310,7 @@ export class ErrorHandler {
         'At least one endpoint must be configured',
         {},
         ErrorSeverity.HIGH,
-        false
+        false,
       );
     }
 
@@ -332,7 +335,7 @@ export class ErrorHandler {
 
     const endpointObj = endpoint as Record<string, unknown>;
 
-    if (!endpointObj['baseUrl'] || typeof endpointObj['baseUrl'] !== 'string') {
+    if (!endpointObj.baseUrl || typeof endpointObj.baseUrl !== 'string') {
       throw this.createError(
         ErrorCode.INVALID_ENDPOINT_CONFIG,
         'Endpoint must have a valid baseUrl string',
@@ -342,7 +345,7 @@ export class ErrorHandler {
       );
     }
 
-    if (!endpointObj['specs'] || !Array.isArray(endpointObj['specs'])) {
+    if (!endpointObj.specs || !Array.isArray(endpointObj.specs)) {
       throw this.createError(
         ErrorCode.INVALID_ENDPOINT_CONFIG,
         'Endpoint must have a specs array',
@@ -357,7 +360,7 @@ export class ErrorHandler {
 // Convenience functions for common error scenarios
 export const createSpecNotFoundError = (
   url: string,
-  context: Partial<ErrorContext> = {}
+  context: Partial<ErrorContext> = {},
 ): NocchinoError => {
   const handler = ErrorHandler.getInstance();
   return handler.createError(
@@ -365,14 +368,14 @@ export const createSpecNotFoundError = (
     `No OpenAPI specification found for URL: ${url}`,
     { url, ...context },
     ErrorSeverity.LOW,
-    true
+    true,
   );
 };
 
 export const createEndpointMismatchError = (
   url: string,
   availableEndpoints: string[],
-  context: Partial<ErrorContext> = {}
+  context: Partial<ErrorContext> = {},
 ): NocchinoError => {
   const handler = ErrorHandler.getInstance();
   return handler.createError(
@@ -380,13 +383,13 @@ export const createEndpointMismatchError = (
     `No matching endpoint found for URL: ${url}. Available endpoints: ${availableEndpoints.join(', ')}`,
     { url, additionalInfo: { availableEndpoints }, ...context },
     ErrorSeverity.MEDIUM,
-    true
+    true,
   );
 };
 
 export const createMockGenerationError = (
   message: string,
-  context: Partial<ErrorContext> = {}
+  context: Partial<ErrorContext> = {},
 ): NocchinoError => {
   const handler = ErrorHandler.getInstance();
   return handler.createError(
@@ -394,13 +397,13 @@ export const createMockGenerationError = (
     `Mock generation failed: ${message}`,
     context,
     ErrorSeverity.MEDIUM,
-    true
+    true,
   );
 };
 
 export const createValidationError = (
   message: string,
-  context: Partial<ErrorContext> = {}
+  context: Partial<ErrorContext> = {},
 ): NocchinoError => {
   const handler = ErrorHandler.getInstance();
   return handler.createError(
@@ -408,7 +411,7 @@ export const createValidationError = (
     `Validation failed: ${message}`,
     context,
     ErrorSeverity.MEDIUM,
-    true
+    true,
   );
 };
 

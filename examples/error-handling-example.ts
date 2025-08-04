@@ -18,7 +18,6 @@ import {
   createEndpointMismatchError,
   createMockGenerationError,
 } from '../src/utils/dynamicNock';
-
 import {
   ErrorHandler,
   ErrorCategory,
@@ -69,7 +68,7 @@ try {
 
   // Get recent errors
   const recentErrors = errorHandler.getRecentErrors(5);
-  console.log('Recent Errors:', recentErrors.map(e => ({
+  console.log('Recent Errors:', recentErrors.map((e) => ({
     code: e.code,
     message: e.message,
     severity: e.severity,

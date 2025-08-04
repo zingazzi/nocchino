@@ -6,6 +6,12 @@
  */
 
 import {
+  initialize,
+  activateNockForRequest,
+  restoreNock,
+  getState,
+} from '../src/utils/dynamicNock';
+import {
   ErrorHandler,
   ErrorCode,
   ErrorSeverity,
@@ -16,13 +22,6 @@ import {
   createMockGenerationError,
   createValidationError,
 } from '../src/utils/errorHandler';
-
-import {
-  initialize,
-  activateNockForRequest,
-  restoreNock,
-  getState,
-} from '../src/utils/dynamicNock';
 
 describe('Error Handling System', () => {
   beforeEach(() => {
@@ -120,7 +119,7 @@ describe('Error Handling System', () => {
       expect(error.severity).toBe(ErrorSeverity.MEDIUM);
       expect(error.recoverable).toBe(true);
       expect(error.context.url).toBe('https://api3.com/test');
-      expect(error.context.additionalInfo?.['availableEndpoints']).toEqual(availableEndpoints);
+      expect(error.context.additionalInfo?.availableEndpoints).toEqual(availableEndpoints);
     });
 
     test('should create mock generation error', () => {
@@ -341,7 +340,7 @@ describe('Error Handling System', () => {
       const requestDetails = {
         url: 'https://api.example.com/v1/users',
         method: 'GET',
-        headers: { 'Authorization': 'Bearer token' },
+        headers: { Authorization: 'Bearer token' },
       };
 
       const error = errorHandler.createError(

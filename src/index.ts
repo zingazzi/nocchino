@@ -28,6 +28,19 @@ export {
   createValidationError,
 } from './utils/errorHandler';
 
+// Export debugging
+export {
+  NocchinoDebugger,
+  DebugLevel,
+  DebugCategory,
+  nocchinoDebugger,
+  debugRequest,
+  debugSpecification,
+  debugEndpoint,
+  debugError,
+  debugPerformance,
+} from './utils/debugger';
+
 // Export types
 export type {
   OpenAPISpec,
@@ -56,6 +69,15 @@ export type {
 export type {
   ErrorContext,
 } from './utils/errorHandler';
+
+// Export debugging types
+export type {
+  PerformanceMetrics,
+  DebugSession,
+  DebugLog,
+  DebugConfig,
+  RequestTracker,
+} from './utils/debugger';
 
 // Export version information
 export const VERSION = '1.0.0';

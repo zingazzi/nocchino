@@ -20,6 +20,10 @@ import type {
 } from '../types';
 
 import {
+  debugEndpoint,
+  debugError,
+} from './debugger';
+import {
   ErrorCode,
   ErrorSeverity,
   errorHandler,
@@ -73,12 +77,14 @@ export class DynamicNockRepository {
       this.loadedSpecs.clear();
       this.endpointSpecs.clear();
 
-      // Load all OpenAPI specifications for each endpoint
+      // Debug endpoint configuration
       endpoints.forEach((endpoint) => {
+        debugEndpoint(endpoint);
         this.loadEndpointSpecifications(endpoint);
       });
     } catch (error) {
       if (error instanceof Error) {
+        debugError(error, { endpoints });
         throw errorHandler.createError(
           ErrorCode.INVALID_CONFIG,
           `Failed to initialize repository: ${error.message}`,
