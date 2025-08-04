@@ -131,9 +131,6 @@ export class DynamicNockRepository {
         // eslint-disable-next-line no-console
         console.warn(`Failed to process spec path ${specPath}: ${error}`);
       }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to load specifications from folder: ${error}`);
     }
 
     this.endpointSpecs.set(endpoint.baseUrl, endpointSpecs);
