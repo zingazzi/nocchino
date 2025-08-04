@@ -207,9 +207,13 @@ export type HTTPStatusCode =
   | 511 // Network Authentication Required
 
 // Nocchino Configuration Types
+export interface NocchinoEndpoint {
+  baseUrl: string
+  specs: string[] // Array of folder paths or file paths
+}
+
 export interface NocchinoConfig {
-  baseUrl?: string
-  defaultSpec: string // Now represents a folder path instead of a single file
+  endpoints: NocchinoEndpoint[]
   specMap?: Record<string, Record<string, string>>
 }
 
@@ -262,8 +266,7 @@ export interface MockResponseGenerator<TResponse = unknown> {
 
 export interface RepositoryState {
   activeIntercepts: number
-  baseUrl: string | null
-  defaultSpec: string
+  endpoints: NocchinoEndpoint[]
   specMapSize: number
 }
 

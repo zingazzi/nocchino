@@ -12,12 +12,11 @@ Nocchino is a powerful and flexible multi-endpoint mocking solution for Node.js 
 ## 🚀 Features
 
 - **Multi-Endpoint Support**: Test against multiple APIs simultaneously
-- **OpenAPI-Based Mocking**: Uses actual OpenAPI specifications only (no preset schemas or generic mock data)
+- **OpenAPI-Based Mocking**: Uses actual OpenAPI specifications only (no preset schemas)
 - **Smart Path Matching**: Automatic endpoint and specification matching
 - **Version Prefix Handling**: Supports `/v1/`, `/v2/` prefixes in URLs
 - **Type Safety**: Built-in TypeScript support with full type definitions
 - **Flexible Configuration**: Easy setup with customizable endpoint mapping
-- **Comprehensive HTTP Status Codes**: Complete coverage of all 61 standard HTTP status codes with full type safety
 
 ## 📋 Table of Contents
 
@@ -108,6 +107,46 @@ const endpoints = [
 initialize(endpoints)
 ```
 
+### 2. Create OpenAPI Specifications
+
+Place your OpenAPI YAML files in the `specs/` directory:
+
+```
+specs/
+├── api-v1/
+│   ├── users-api.yml
+│   └── products-api.yml
+└── api-v2/
+    └── users-api-v2.yml
+```
+
+### 3. Write Tests
+
+```typescript
+import { initialize, activateNockForRequest, restoreNock } from 'nocchino'
+
+// Configure multiple endpoints for different APIs
+const endpoints = [
+  {
+    baseUrl: 'https://api.example.com',
+    specs: [
+      'specs/api-v1', // Folder containing OpenAPI specs
+      'specs/api-v2/users-api-v2.yml', // Single file
+    ],
+  },
+  {
+    baseUrl: 'https://api.example2.com',
+    specs: [
+      'specs/api-v2', // Another folder
+      'specs/api-v1/products-api.yml', // Another single file
+    ],
+  },
+]
+
+// Initialize with multiple endpoints
+initialize(endpoints)
+```
+
 ### 3. Testing Different Endpoints
 
 ```typescript
@@ -165,7 +204,7 @@ describe('Multi-Endpoint Testing', () => {
 ### Basic Configuration
 
 ```typescript
-import { NocchinoConfig } from 'nocchino'
+import { NocchinoConfig, NocchinoEndpoint } from 'nocchino'
 
 const config: NocchinoConfig = {
   // Multiple endpoints with their respective OpenAPI specifications
@@ -294,7 +333,59 @@ describe('Multi-Endpoint Testing', () => {
 })
 ```
 
-### Environment-Based Testing
+### Multi-Endpoint Testing
+
+```typescript
+import { initialize, activateNockForRequest, restoreNock } from 'nocchino'
+import axios from 'axios'
+
+describe('Multi-Endpoint Testing', () => {
+  beforeEach(() => {
+    // Configure multiple endpoints
+    const endpoints = [
+      {
+        baseUrl: 'https://api.example.com',
+        specs: ['specs/api-v1', 'specs/api-v2'],
+      },
+      {
+        baseUrl: 'https://api.example2.com',
+        specs: ['specs/api-v2', 'specs/api-v1/products-api.yml'],
+      },
+    ]
+    initialize(endpoints)
+  })
+
+  afterEach(() => {
+    restoreNock()
+  })
+
+  test('should handle requests to different endpoints', async () => {
+    // Request to first endpoint
+    activateNockForRequest({
+      url: 'https://api.example.com/v1/users/123',
+      method: 'GET',
+    })
+
+    // Request to second endpoint
+    activateNockForRequest({
+      url: 'https://api.example2.com/v2/products/456',
+      method: 'POST',
+      body: { name: 'Test Product' },
+    })
+
+    // Both requests will be handled by their respective OpenAPI specs
+    const userResponse = await axios.get('https://api.example.com/v1/users/123')
+    const productResponse = await axios.post('https://api.example2.com/v2/products/456', {
+      name: 'Test Product',
+    })
+
+    expect(userResponse.status).toBe(200)
+    expect(productResponse.status).toBe(201)
+  })
+})
+```
+
+### Environment-based Testing
 
 ```typescript
 import { configure, activateNockForRequest, restoreNock } from 'nocchino'
@@ -409,6 +500,166 @@ const config: NocchinoConfig = {
     },
   },
 }
+
+const requestDetails: RequestDetails = {
+  url: 'https://api.example.com/v1/users',
+  method: 'GET',
+  headers: { 'X-Api-Version': 'v1' },
+}
+```
+
+## Generic Types Support
+
+Nocchino now supports generic types for type-safe API requests and responses. This provides better TypeScript integration and compile-time type checking.
+
+### Generic RequestDetails
+
+The `RequestDetails` interface now supports generic types for request body and response:
+
+```typescript
+interface RequestDetails<TBody = unknown, TResponse = unknown> {
+  url: string
+  method: string
+  headers?: Record<string, string>
+  body?: TBody
+  expectedResponse?: TResponse
+}
+```
+
+### Generic API Client
+
+Use the `GenericAPIClient` class for type-safe API requests:
+
+```typescript
+import { GenericAPIClient } from 'nocchino'
+
+// Define your types
+interface CreateResourceRequest {
+  name: string
+  description: string
+  type: string
+  metadata?: Record<string, unknown>
+}
+
+interface Resource {
+  id: string
+  name: string
+  description: string
+  type: string
+  status: string
+  createdAt: string
+  updatedAt: string
+  metadata?: Record<string, unknown>
+}
+
+// Create a type-safe API client
+const resourceClient = new GenericAPIClient<CreateResourceRequest, Resource>(
+  'https://api.example.com'
+)
+
+// Type-safe GET request
+const resourceResponse = await resourceClient.get<Resource>(
+  '/v1/resources/123',
+  {
+    'X-Api-Version': 'v1',
+  }
+)
+
+// Type-safe POST request
+const createResourceResponse = await resourceClient.post<
+  CreateResourceRequest,
+  Resource
+>(
+  '/v1/resources',
+  {
+    name: 'Example Resource',
+    description: 'A generic resource',
+    type: 'example',
+    metadata: { category: 'demo' },
+  },
+  {
+    'X-Api-Version': 'v1',
+  }
+)
+```
+
+### Specialized API Clients
+
+Create specialized API clients that extend the generic client:
+
+```typescript
+export class ResourceAPIClient extends GenericAPIClient<
+  CreateResourceRequest,
+  Resource
+> {
+  constructor(baseUrl: string) {
+    super(baseUrl, {
+      'Content-Type': 'application/json',
+      'X-Api-Version': 'v1',
+    })
+  }
+
+  public async createResource(
+    resourceData: CreateResourceRequest
+  ): Promise<APIResponse<Resource>> {
+    return this.post('/v1/resources', resourceData)
+  }
+
+  public async getResourceById(
+    resourceId: string
+  ): Promise<APIResponse<Resource>> {
+    return this.get<Resource>(`/v1/resources/${resourceId}`)
+  }
+}
+```
+
+### Generic Functions
+
+All Nocchino functions now support generic types:
+
+```typescript
+import { activateNockForRequest } from 'nocchino'
+
+// Type-safe request activation
+const requestDetails: RequestDetails<CreateResourceRequest, Resource> = {
+  url: 'https://api.example.com/v1/resources',
+  method: 'POST',
+  headers: { 'X-Api-Version': 'v1' },
+  body: {
+    name: 'Example Resource',
+    description: 'A generic resource',
+    type: 'example',
+  },
+}
+
+activateNockForRequest(requestDetails)
+```
+
+### Configuration
+
+The `endpoints` array is now mandatory and supports multiple endpoints with their respective OpenAPI specifications:
+
+```typescript
+import { configure } from 'nocchino'
+
+configure({
+  endpoints: [
+    {
+      baseUrl: 'https://api.example.com',
+      specs: ['specs/api-v1', 'specs/api-v2'],
+    },
+    {
+      baseUrl: 'https://api.example2.com',
+      specs: ['specs/api-v2', 'specs/api-v1/products-api.yml'],
+    },
+  ],
+  specMap: {
+    'X-Api-Version': {
+      v1: 'specs/api-v1',
+      v2: 'specs/api-v2',
+    },
+  },
+})
 ```
 
 ### HTTP Status Codes
@@ -460,6 +711,20 @@ specs/
     └── common-schemas.yml
 ```
 
+**Multi-Endpoint Structure:**
+
+```
+specs/
+├── api-v1/                    # For https://api.example.com
+│   ├── users-api.yml
+│   └── products-api.yml
+├── api-v2/                    # For https://api.example2.com
+│   ├── users-api-v2.yml
+│   └── products-api-v2.yml
+└── shared/                    # Shared across endpoints
+    └── common-schemas.yml
+```
+
 **Features:**
 
 - **Automatic Loading**: All `.yml`, `.yaml`, and `.json` files in folders are automatically loaded
@@ -467,6 +732,28 @@ specs/
 - **Multiple Endpoints**: Support for multiple API endpoints in the same test suite
 - **Flexible Organization**: Organize specs by version, domain, or any structure you prefer
 - **Multi-Domain Testing**: Test against different APIs simultaneously (e.g., `api.example.com` and `api.example2.com`)
+
+See `examples/generic-client-example.ts` for a complete demonstration.
+
+## 🏗️ Design Patterns
+
+Nocchino implements several design patterns for maintainability and extensibility:
+
+### 1. Factory Pattern
+
+Used for creating mock responses based on OpenAPI schemas.
+
+### 2. Strategy Pattern
+
+Different mapping strategies for routing requests to appropriate OpenAPI specifications.
+
+### 3. Singleton Pattern
+
+Single repository instance manages all Nock state and configuration.
+
+### 4. Template Method Pattern
+
+Standardized flow for request processing: map → load → setup → intercept.
 
 ## 🎯 Best Practices
 
@@ -524,6 +811,33 @@ describe('Multi-Endpoint API Testing', () => {
 ```
 
 ### Configuration Management
+
+```typescript
+// Good: Proper error handling
+test('should handle API errors gracefully', async () => {
+  try {
+    activateNockForRequest({
+      url: 'https://api.example.com/v1/users',
+      method: 'GET',
+      headers: { 'X-Api-Version': 'v1' },
+    })
+
+    const response = await axios.get('https://api.example.com/v1/users', {
+      headers: { 'X-Api-Version': 'v1' },
+    })
+
+    expect(response.status).toBe(200)
+  } catch (error) {
+    console.error(
+      'Test failed:',
+      error instanceof Error ? error.message : 'Unknown error'
+    )
+    throw error
+  }
+})
+```
+
+### 4. Configuration Management
 
 ```typescript
 // Good: Centralized configuration with multiple endpoints
