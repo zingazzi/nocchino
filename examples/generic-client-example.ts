@@ -33,14 +33,12 @@ interface ResourceListResponse {
 
 // Configure Nocchino with mandatory defaultSpec folder
 configure({
-  specMap: {
-    'X-Api-Version': {
-      v1: 'specs/api-v1/users-api.yml',
-      v2: 'specs/api-v2/users-api-v2.yml',
+  endpoints: [
+    {
+      baseUrl: 'https://api.example.com',
+      specs: ['specs/api-v1', 'specs/api-v2'],
     },
-  },
-  defaultSpec: 'specs', // Now points to a folder containing all OpenAPI specs
-  baseUrl: 'https://api.example.com',
+  ],
 });
 
 /**
