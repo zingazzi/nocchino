@@ -15,6 +15,38 @@ export {
   DynamicNockRepository,
 } from './utils/dynamicNock';
 
+// Export new architecture components
+export {
+  EventManager,
+  eventManager,
+} from './utils/eventManager';
+
+export {
+  JsonSchemaFakerStrategy,
+  EmptyObjectStrategy,
+  CustomDataStrategy,
+  MemoryCacheStrategy,
+  NoCacheStrategy,
+  RetryStrategy,
+  FallbackStrategy,
+  LogAndContinueStrategy,
+  AbortStrategy,
+} from './utils/strategies';
+
+// Export enhanced cache system
+export {
+  EnhancedMemoryCacheStrategy,
+  TieredCacheStrategy,
+  RedisLikeCacheStrategy,
+  CacheManager,
+  cacheManager,
+} from './utils/cacheSystem';
+
+export {
+  NockRepositoryFactory,
+  RepositoryConfigBuilder,
+} from './utils/repositoryFactory';
+
 // Export error handling
 export {
   ErrorHandler,
@@ -63,6 +95,22 @@ export type {
   NocchinoError,
   HTTPMethod,
   HTTPStatusCode,
+  // New architecture types
+  NockEventListener,
+  MockGenerationStrategy,
+  CachingStrategy,
+  ErrorRecoveryStrategy,
+  INockRepository,
+  IEventManager,
+  IMockGenerationStrategy,
+  ICachingStrategy,
+  IErrorRecoveryStrategy,
+  RepositoryConfig,
+  MockResponse,
+  // Enhanced cache system types
+  CacheEvent,
+  CacheStatistics,
+  CacheEntry,
 } from './types';
 
 // Export error handling types

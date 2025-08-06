@@ -19,6 +19,10 @@ Nocchino is a powerful and flexible multi-endpoint mocking solution for Node.js 
 - **Flexible Configuration**: Easy setup with customizable endpoint mapping
 - **Advanced Error Handling**: Structured error management with recovery strategies
 - **Comprehensive Debugging**: Multi-level logging, performance monitoring, and request tracking
+- **Enterprise Cache System**: Multi-strategy caching with LRU, tiered, and Redis-like implementations
+- **Design Patterns**: Observer, Strategy, and Dependency Injection patterns for extensibility
+- **Performance Monitoring**: Real-time statistics and event-driven monitoring
+- **Factory & Builder Patterns**: Easy configuration with predefined and custom setups
 
 ## 📋 Table of Contents
 
@@ -82,31 +86,45 @@ configure({
 })
 ```
 
-### 2. Multi-Endpoint Setup
+### 2. Multi-Endpoint Setup with Factory Pattern
 
 ```typescript
-import { initialize, activateNockForRequest, restoreNock } from 'nocchino'
+import { NockRepositoryFactory, activateNockForRequest, restoreNock } from 'nocchino'
 
-// Configure multiple endpoints for different APIs
-const endpoints = [
-  {
-    baseUrl: 'https://api.example.com',
-    specs: [
-      'specs/api-v1', // Folder containing OpenAPI specs
-      'specs/api-v2/users-api-v2.yml', // Single file
-    ],
-  },
-  {
-    baseUrl: 'https://api.example2.com',
-    specs: [
-      'specs/api-v2', // Another folder
-      'specs/api-v1/products-api.yml', // Another single file
-    ],
-  },
-]
+// Use factory pattern for easy configuration
+const basicRepo = NockRepositoryFactory.createBasic()
+const perfRepo = NockRepositoryFactory.createPerformanceOptimized()
+const debugRepo = NockRepositoryFactory.createDebugOptimized()
 
-// Initialize with multiple endpoints
-initialize(endpoints)
+// Or use builder pattern for custom configuration
+const customRepo = new RepositoryConfigBuilder()
+  .withCachingStrategy(new EnhancedMemoryCacheStrategy(1000))
+  .withDebugging(true)
+  .withPerformanceMonitoring(true)
+  .buildRepository()
+```
+
+### 3. Advanced Setup with Cache System
+
+```typescript
+import {
+  NockRepositoryFactory,
+  EnhancedMemoryCacheStrategy,
+  TieredCacheStrategy,
+  activateNockForRequest,
+  restoreNock
+} from 'nocchino'
+
+// Production setup with Redis-like cache
+const prodRepo = NockRepositoryFactory.createForProduction()
+
+// High-performance setup with tiered cache
+const perfRepo = NockRepositoryFactory.createPerformanceOptimized()
+
+// Custom setup with enhanced memory cache
+const customRepo = NockRepositoryFactory.createWithCustomStrategies({
+  cachingStrategy: new EnhancedMemoryCacheStrategy(2000, true)
+})
 ```
 
 ### 2. Create OpenAPI Specifications
@@ -279,14 +297,17 @@ initialize(endpoints)
 
 ## 📚 Usage Examples
 
-### Multi-Endpoint Testing
+### Multi-Endpoint Testing with Cache System
 
 ```typescript
-import { initialize, activateNockForRequest, restoreNock } from 'nocchino'
+import { NockRepositoryFactory, activateNockForRequest, restoreNock } from 'nocchino'
 import axios from 'axios'
 
-describe('Multi-Endpoint Testing', () => {
+describe('Multi-Endpoint Testing with Cache', () => {
   beforeEach(() => {
+    // Use factory pattern for easy setup
+    const repo = NockRepositoryFactory.createPerformanceOptimized()
+
     // Configure multiple endpoints
     const endpoints = [
       {
@@ -298,7 +319,7 @@ describe('Multi-Endpoint Testing', () => {
         specs: ['specs/api-v2', 'specs/api-v1/products-api.yml'],
       },
     ]
-    initialize(endpoints)
+    repo.initialize(endpoints)
   })
 
   afterEach(() => {
@@ -333,6 +354,40 @@ describe('Multi-Endpoint Testing', () => {
     })
   })
 })
+```
+
+### Cache System Usage
+
+```typescript
+import {
+  EnhancedMemoryCacheStrategy,
+  TieredCacheStrategy,
+  CacheManager,
+  cacheManager
+} from 'nocchino'
+
+// Enhanced memory cache with event monitoring
+const cache = new EnhancedMemoryCacheStrategy(1000, true)
+
+// Add event listener for monitoring
+cache.addEventListener((event) => {
+  console.log(`Cache ${event.type}: ${event.key}`)
+})
+
+// Set cache entries with TTL
+cache.set('user:123', { id: 123, name: 'John' }, 300000) // 5 minutes
+
+// Get cache statistics
+const stats = cache.getStatistics()
+console.log(`Hit rate: ${stats.hitRate}%`)
+
+// Tiered cache for high-performance scenarios
+const tieredCache = new TieredCacheStrategy(100, 1000)
+tieredCache.set('session:user:123', sessionData, 60000)
+
+// Cache manager for strategy management
+cacheManager.registerStrategy('custom', new EnhancedMemoryCacheStrategy(500))
+cacheManager.setDefaultStrategy('memory')
 ```
 
 ### Multi-Endpoint Testing
@@ -873,19 +928,44 @@ See `examples/generic-client-example.ts` for a complete demonstration.
 
 Nocchino implements several design patterns for maintainability and extensibility:
 
-### 1. Factory Pattern
+### 1. Observer Pattern
 
-Used for creating mock responses based on OpenAPI schemas.
+Event-driven architecture for loose coupling and extensibility:
+- **EventManager**: Centralized event management
+- **NockEventListener**: Interface for event listeners
+- **Event Types**: Request start/complete, error, spec loaded, endpoint configured
 
 ### 2. Strategy Pattern
 
-Different mapping strategies for routing requests to appropriate OpenAPI specifications.
+Pluggable behaviors for different use cases:
+- **Mock Generation Strategies**: JsonSchemaFaker, EmptyObject, CustomData
+- **Caching Strategies**: EnhancedMemory, Tiered, Redis-like, NoCache
+- **Error Recovery Strategies**: Retry, Fallback, LogAndContinue, Abort
 
-### 3. Singleton Pattern
+### 3. Dependency Injection
+
+Flexible configuration and easy testing:
+- **Factory Pattern**: Predefined repository configurations
+- **Builder Pattern**: Fluent API for complex configurations
+- **Repository Configurations**: Basic, Performance, Debug, Testing, Production
+
+### 4. Cache System
+
+Enterprise-grade caching with multiple strategies:
+- **Enhanced Memory Cache**: LRU eviction, statistics, events
+- **Tiered Cache**: L1 (fast) + L2 (large) caching
+- **Redis-like Cache**: Random eviction policy
+- **Cache Manager**: Centralized strategy management
+
+### 5. Factory Pattern
+
+Used for creating mock responses and repository configurations.
+
+### 6. Singleton Pattern
 
 Single repository instance manages all Nock state and configuration.
 
-### 4. Template Method Pattern
+### 7. Template Method Pattern
 
 Standardized flow for request processing: map → load → setup → intercept.
 
@@ -1136,8 +1216,32 @@ This ensures a clean, predictable mocking experience without any unexpected hard
 - ✅ **Comprehensive HTTP Status Codes**: All 61 standard HTTP status codes
 - ✅ **Type Safety**: Full TypeScript support with comprehensive type definitions
 - ✅ **Flexible Configuration**: Easy setup with customizable endpoint mapping
+- ✅ **Enterprise Cache System**: Multi-strategy caching with LRU, tiered, and Redis-like implementations
+- ✅ **Design Patterns**: Observer, Strategy, and Dependency Injection patterns for extensibility
+- ✅ **Performance Monitoring**: Real-time statistics and event-driven monitoring
+- ✅ **Factory & Builder Patterns**: Easy configuration with predefined and custom setups
 - ✅ **Clean Architecture**: Well-structured, maintainable codebase
 
 ---
 
-**Nocchino provides a robust, multi-endpoint solution for OpenAPI-based HTTP mocking with no preset schemas and comprehensive HTTP status code support. The architecture supports complex testing scenarios while maintaining simplicity and backward compatibility.**
+**Nocchino provides a robust, multi-endpoint solution for OpenAPI-based HTTP mocking with enterprise-grade caching, advanced design patterns, and comprehensive monitoring capabilities. The architecture supports complex testing scenarios while maintaining simplicity, performance, and backward compatibility.**
+
+## 🚀 New in Version 1.1.0
+
+### Enterprise Cache System
+- **Enhanced Memory Cache**: LRU eviction, statistics, and event monitoring
+- **Tiered Cache**: Multi-level caching for high-performance scenarios
+- **Redis-like Cache**: Random eviction policy for production environments
+- **Cache Manager**: Centralized strategy management and monitoring
+
+### Design Pattern Improvements
+- **Observer Pattern**: Event-driven architecture for loose coupling
+- **Strategy Pattern**: Pluggable behaviors for different use cases
+- **Dependency Injection**: Flexible configuration and easy testing
+- **Factory & Builder Patterns**: Easy setup with predefined configurations
+
+### Performance Enhancements
+- **Real-time Statistics**: Hit rates, evictions, response times
+- **Event Monitoring**: Cache events, performance metrics
+- **Memory Management**: Automatic cleanup and LRU eviction
+- **Performance Optimization**: Tiered caching for optimal performance
