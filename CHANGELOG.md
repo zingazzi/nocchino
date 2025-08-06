@@ -5,6 +5,108 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.0] - 2024-08-06
+
+### 🐛 Bug Fixes
+
+#### TypeScript Compilation Issues
+- **Fixed**: Index signature property access errors in `errorHandler.ts`
+  - Changed `endpointObj.baseUrl` to `endpointObj['baseUrl']`
+  - Changed `endpointObj.specs` to `endpointObj['specs']`
+- **Fixed**: Index signature property access in test files
+  - Changed `error.context.additionalInfo?.availableEndpoints` to `error.context.additionalInfo?.['availableEndpoints']`
+- **Fixed**: TypeScript strict mode compatibility issues
+- **Fixed**: Property access from index signatures requiring bracket notation
+
+#### Test Suite Improvements
+- **Fixed**: All 5 test suites now passing (68 tests total)
+- **Fixed**: TypeScript compilation errors in test files
+- **Enhanced**: Test reliability and consistency
+- **Improved**: Test execution performance
+
+### 🔧 Technical Improvements
+
+#### Code Quality
+- **Enhanced**: TypeScript strict mode compliance
+- **Improved**: Index signature property access patterns
+- **Enhanced**: Type safety across the codebase
+- **Fixed**: Compilation errors in development environment
+
+#### Developer Experience
+- **Fixed**: Test suite execution without TypeScript errors
+- **Enhanced**: Better error messages for property access
+- **Improved**: Development workflow with clean compilation
+- **Enhanced**: Type safety for better IDE support
+
+### 🧪 Testing Enhancements
+
+#### Test Infrastructure
+- **Fixed**: All test suites now compile and run successfully
+- **Enhanced**: Test execution reliability
+- **Improved**: Test performance and execution time
+- **Fixed**: TypeScript compilation issues in test environment
+
+#### Test Coverage
+- **Maintained**: 68 tests across 5 test suites
+- **Enhanced**: Test execution stability
+- **Improved**: Test error reporting and debugging
+- **Fixed**: Test compilation issues
+
+### 📚 Documentation
+
+#### Technical Documentation
+- **Updated**: TypeScript configuration for strict mode compliance
+- **Enhanced**: Code examples with proper property access patterns
+- **Improved**: Development setup instructions
+- **Updated**: Testing guidelines for TypeScript compliance
+
+### 🛠 Development Tools
+
+#### Build System
+- **Fixed**: TypeScript compilation issues
+- **Enhanced**: Strict mode compliance
+- **Improved**: Development environment setup
+- **Fixed**: Test execution in CI/CD environments
+
+### 🎯 Breaking Changes
+
+#### TypeScript Compliance
+- **Changed**: Property access patterns for index signatures
+- **Changed**: Error handler property access to use bracket notation
+- **Changed**: Test file property access patterns
+
+### 🚀 New Features
+
+#### Type Safety Improvements
+- **Enhanced**: TypeScript strict mode compliance
+- **Improved**: Index signature property access patterns
+- **Enhanced**: Type safety for error handling system
+- **Improved**: Development experience with better type checking
+
+### 🔧 Bug Fixes
+
+- **Fixed**: TypeScript compilation errors in `errorHandler.ts`
+- **Fixed**: TypeScript compilation errors in test files
+- **Fixed**: Index signature property access issues
+- **Fixed**: Test suite execution failures
+- **Fixed**: Development environment compilation issues
+
+### 📈 Performance Improvements
+
+- **Optimized**: Test execution performance
+- **Enhanced**: TypeScript compilation speed
+- **Improved**: Development workflow efficiency
+- **Optimized**: Test suite execution time
+
+### 🧹 Code Cleanup
+
+- **Fixed**: TypeScript strict mode violations
+- **Enhanced**: Property access patterns for index signatures
+- **Improved**: Code consistency across the codebase
+- **Cleaned**: Test file compilation issues
+
+## [v1.1.0] - 2024-08-04
+
 ## [v1.1.0] - 2024-08-04
 
 ### 🛠 Error Handling System
