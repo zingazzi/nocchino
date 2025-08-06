@@ -32,23 +32,29 @@ import { EventManager } from '../src/utils/eventManager';
 /**
  * Custom Event Listener for logging
  */
+// eslint-disable-next-line max-classes-per-file
 class LoggingEventListener implements NockEventListener {
+  // eslint-disable-next-line class-methods-use-this
   public onRequestStarted(request: RequestDetails): void {
     console.log(`🔍 [Observer] Request started: ${request.method} ${request.url}`);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public onRequestCompleted(response: MockResponse): void {
     console.log(`✅ [Observer] Request completed: ${response.status} (${response.duration}ms)`);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public onError(error: NocchinoError): void {
     console.error(`❌ [Observer] Error occurred: ${error.message}`);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public onSpecificationLoaded(spec: OpenAPISpec): void {
     console.log(`📄 [Observer] Specification loaded: ${spec.info.title} v${spec.info.version}`);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public onEndpointConfigured(endpoint: NocchinoEndpoint): void {
     console.log(`🔧 [Observer] Endpoint configured: ${endpoint.baseUrl}`);
   }
@@ -57,13 +63,14 @@ class LoggingEventListener implements NockEventListener {
 /**
  * Performance Monitoring Event Listener
  */
+// eslint-disable-next-line max-classes-per-file
 class PerformanceEventListener implements NockEventListener {
   private requestCount = 0;
 
   private totalDuration = 0;
 
   public onRequestStarted(request: RequestDetails): void {
-    this.requestCount++;
+    this.requestCount += 1;
     console.log(`📊 [Performance] Request #${this.requestCount}: ${request.method} ${request.url}`);
   }
 
@@ -77,10 +84,12 @@ class PerformanceEventListener implements NockEventListener {
     console.error(`📊 [Performance] Error in request #${this.requestCount}: ${error.message}`);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public onSpecificationLoaded(spec: OpenAPISpec): void {
     console.log(`📊 [Performance] Spec loaded: ${Object.keys(spec.paths).length} paths`);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public onEndpointConfigured(endpoint: NocchinoEndpoint): void {
     console.log(`📊 [Performance] Endpoint: ${endpoint.specs.length} specs`);
   }
@@ -91,6 +100,7 @@ class PerformanceEventListener implements NockEventListener {
 /**
  * Custom Mock Generation Strategy for User Data
  */
+// eslint-disable-next-line max-classes-per-file
 class UserDataStrategy extends CustomDataStrategy {
   constructor() {
     super();
@@ -114,6 +124,7 @@ class UserDataStrategy extends CustomDataStrategy {
     }));
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public override getStrategyName(): string {
     return 'UserData';
   }
@@ -124,6 +135,7 @@ class UserDataStrategy extends CustomDataStrategy {
 /**
  * Example demonstrating the new architecture patterns
  */
+// eslint-disable-next-line require-await
 async function demonstrateArchitecture(): Promise<void> {
   console.log('🚀 Nocchino Architecture Example');
   console.log('================================\n');

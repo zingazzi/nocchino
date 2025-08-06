@@ -1,5 +1,5 @@
 /**
- * Factory Pattern for Nocchino - Dependency Injection Implementation
+ * Repository Factory - Dependency Injection Implementation
  *
  * This module provides factory methods to create repository instances
  * with different configurations and strategies.
@@ -26,6 +26,8 @@ import {
   LogAndContinueStrategy,
   AbortStrategy,
 } from './strategies';
+
+// eslint-disable-next-line max-classes-per-file
 
 /**
  * Factory class for creating Nock repository instances
@@ -99,6 +101,7 @@ export class NockRepositoryFactory {
    */
   public static createWithConfig(config: RepositoryConfig): INockRepository {
     // Import here to avoid circular dependencies
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
     const { DynamicNockRepository } = require('./dynamicNock');
 
     return new DynamicNockRepository(config);
@@ -208,6 +211,7 @@ export class NockRepositoryFactory {
     options?: Record<string, unknown>,
   ): IMockGenerationStrategy | ICachingStrategy | IErrorRecoveryStrategy {
     const strategies = this.getAvailableStrategies();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const strategyMap = strategies[strategyType] as Record<string, any>;
     const StrategyClass = strategyMap[strategyName];
 

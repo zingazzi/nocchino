@@ -36,7 +36,7 @@ export {
 export {
   NockRepositoryFactory,
   RepositoryConfigBuilder,
-} from './utils/factory';
+} from './utils/repositoryFactory';
 
 // Export error handling
 export {

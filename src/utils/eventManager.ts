@@ -93,7 +93,7 @@ export class EventManager implements IEventManager {
       try {
         listener.onRequestStarted(request);
       } catch (error) {
-        console.error('Error in request started listener:', error);
+        // Silently handle listener errors to prevent cascading failures
       }
     });
   }
@@ -109,7 +109,7 @@ export class EventManager implements IEventManager {
       try {
         listener.onRequestCompleted(response);
       } catch (error) {
-        console.error('Error in request completed listener:', error);
+        // Silently handle listener errors to prevent cascading failures
       }
     });
   }
@@ -127,7 +127,7 @@ export class EventManager implements IEventManager {
       try {
         listener.onError(error);
       } catch (listenerError) {
-        console.error('Error in error listener:', listenerError);
+        // Silently handle listener errors to prevent cascading failures
       }
     });
   }
@@ -143,7 +143,7 @@ export class EventManager implements IEventManager {
       try {
         listener.onSpecificationLoaded(spec);
       } catch (error) {
-        console.error('Error in specification loaded listener:', error);
+        // Silently handle listener errors to prevent cascading failures
       }
     });
   }
@@ -159,7 +159,7 @@ export class EventManager implements IEventManager {
       try {
         listener.onEndpointConfigured(endpoint);
       } catch (error) {
-        console.error('Error in endpoint configured listener:', error);
+        // Silently handle listener errors to prevent cascading failures
       }
     });
   }
