@@ -302,3 +302,107 @@ export interface JSFOptions {
   maxItems?: number
   maxLength?: number
 }
+
+// Mock Response Type (needed for interfaces below)
+export interface MockResponse {
+  data: unknown
+  status: HTTPStatusCode
+  headers?: Record<string, string>
+  duration?: number
+  specMatched?: string
+  endpointMatched?: string
+  error?: NocchinoError
+}
+
+// ===== NEW ARCHITECTURE TYPES =====
+
+// Observer Pattern Types
+export interface NockEventListener {
+  onRequestStarted(request: RequestDetails): void
+  onRequestCompleted(response: MockResponse): void
+  onError(error: NocchinoError): void
+  onSpecificationLoaded(spec: OpenAPISpec): void
+  onEndpointConfigured(endpoint: NocchinoEndpoint): void
+}
+
+export interface EventManager {
+  addListener(listener: NockEventListener): void
+  removeListener(listener: NockEventListener): void
+  notifyRequestStarted(request: RequestDetails): void
+  notifyRequestCompleted(response: MockResponse): void
+  notifyError(error: NocchinoError): void
+  notifySpecificationLoaded(spec: OpenAPISpec): void
+  notifyEndpointConfigured(endpoint: NocchinoEndpoint): void
+}
+
+// Strategy Pattern Types
+export interface MockGenerationStrategy {
+  generate(schema: OpenAPISchema, options: MockResponseOptions): unknown
+  canHandle(schema: OpenAPISchema): boolean
+  getStrategyName(): string
+}
+
+export interface CachingStrategy {
+  get<T>(key: string): T | null
+  set<T>(key: string, value: T, ttl?: number): void
+  clear(): void
+  has(key: string): boolean
+  delete(key: string): boolean
+}
+
+export interface ErrorRecoveryStrategy {
+  canHandle(error: NocchinoError): boolean
+  handle(error: NocchinoError): Promise<void>
+  getStrategyName(): string
+}
+
+// Dependency Injection Types
+export interface INockRepository {
+  initialize(endpoints: NocchinoEndpoint[]): void
+  configure(config: NocchinoConfig): void
+  activateNockForRequest<TBody = unknown, TResponse = unknown>(
+    requestDetails: RequestDetails<TBody, TResponse>
+  ): void
+  restoreNock(): void
+  getState(): RepositoryState
+}
+
+export interface IEventManager {
+  addListener(listener: NockEventListener): void
+  removeListener(listener: NockEventListener): void
+  notifyRequestStarted(request: RequestDetails): void
+  notifyRequestCompleted(response: MockResponse): void
+  notifyError(error: NocchinoError): void
+  notifySpecificationLoaded(spec: OpenAPISpec): void
+  notifyEndpointConfigured(endpoint: NocchinoEndpoint): void
+}
+
+export interface IMockGenerationStrategy {
+  generate(schema: OpenAPISchema, options: MockResponseOptions): unknown
+  canHandle(schema: OpenAPISchema): boolean
+  getStrategyName(): string
+}
+
+export interface ICachingStrategy {
+  get<T>(key: string): T | null
+  set<T>(key: string, value: T, ttl?: number): void
+  clear(): void
+  has(key: string): boolean
+  delete(key: string): boolean
+}
+
+export interface IErrorRecoveryStrategy {
+  canHandle(error: NocchinoError): boolean
+  handle(error: NocchinoError): Promise<void>
+  getStrategyName(): string
+}
+
+// Factory Types
+export interface RepositoryConfig {
+  eventManager?: IEventManager
+  mockGenerationStrategy?: IMockGenerationStrategy
+  cachingStrategy?: ICachingStrategy
+  errorRecoveryStrategies?: IErrorRecoveryStrategy[]
+  enableDebugging?: boolean
+  enablePerformanceMonitoring?: boolean
+}
