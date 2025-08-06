@@ -234,7 +234,7 @@ const maxRetries = 3;
 let retryCount = 0;
 
 const simulateRetryableOperation = () => {
-          retryCount += 1;
+  retryCount += 1;
 
   if (retryCount < maxRetries) {
     const retryError = errorHandler.createError(

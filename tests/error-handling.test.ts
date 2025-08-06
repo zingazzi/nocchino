@@ -119,7 +119,7 @@ describe('Error Handling System', () => {
       expect(error.severity).toBe(ErrorSeverity.MEDIUM);
       expect(error.recoverable).toBe(true);
       expect(error.context.url).toBe('https://api3.com/test');
-      expect(error.context.additionalInfo?.['availableEndpoints']).toEqual(availableEndpoints);
+      expect(error.context.additionalInfo?.availableEndpoints).toEqual(availableEndpoints);
     });
 
     test('should create mock generation error', () => {

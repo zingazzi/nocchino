@@ -335,7 +335,7 @@ export class ErrorHandler {
 
     const endpointObj = endpoint as Record<string, unknown>;
 
-    if (!endpointObj['baseUrl'] || typeof endpointObj['baseUrl'] !== 'string') {
+    if (!endpointObj.baseUrl || typeof endpointObj.baseUrl !== 'string') {
       throw this.createError(
         ErrorCode.INVALID_ENDPOINT_CONFIG,
         'Endpoint must have a valid baseUrl string',
@@ -345,7 +345,7 @@ export class ErrorHandler {
       );
     }
 
-    if (!endpointObj['specs'] || !Array.isArray(endpointObj['specs'])) {
+    if (!endpointObj.specs || !Array.isArray(endpointObj.specs)) {
       throw this.createError(
         ErrorCode.INVALID_ENDPOINT_CONFIG,
         'Endpoint must have a specs array',

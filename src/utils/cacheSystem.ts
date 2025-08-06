@@ -1,6 +1,6 @@
 /**
  * Comprehensive Cache System for Nocchino
- * 
+ *
  * This module provides a robust caching system with multiple strategies,
  * cache events, statistics, and advanced features for optimal performance.
  */
@@ -55,7 +55,9 @@ export interface CacheEntry<T = unknown> {
  */
 export class EnhancedMemoryCacheStrategy implements CachingStrategy {
   private cache = new Map<string, CacheEntry>();
+
   private maxSize: number = 1000;
+
   private statistics: Omit<CacheStatistics, 'hitRate' | 'totalRequests' | 'averageResponseTime'> = {
     hits: 0,
     misses: 0,
@@ -67,13 +69,15 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
     cacheSize: 0,
     maxSize: 1000,
   };
+
   private eventListeners: ((event: CacheEvent) => void)[] = [];
+
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor(maxSize: number = 1000, enableCleanup: boolean = true) {
     this.maxSize = maxSize;
     this.statistics.maxSize = maxSize;
-    
+
     if (enableCleanup) {
       this.startCleanupInterval();
     }
@@ -109,7 +113,7 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
 
   public set<T>(key: string, value: T, ttl: number = 300000): void {
     const now = Date.now();
-    
+
     // Implement LRU eviction if cache is full
     if (this.cache.size >= this.maxSize) {
       this.evictLRU();
@@ -126,7 +130,7 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
     this.cache.set(key, entry);
     this.statistics.sets += 1;
     this.statistics.cacheSize = this.cache.size;
-    
+
     this.recordEvent('set', key, value, ttl);
   }
 
@@ -134,20 +138,20 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
     this.cache.clear();
     this.statistics.clears += 1;
     this.statistics.cacheSize = 0;
-    
+
     this.recordEvent('clear', 'all');
   }
 
   public has(key: string): boolean {
     const item = this.cache.get(key);
     if (!item) return false;
-    
+
     if (Date.now() > item.expires) {
       this.cache.delete(key);
       this.statistics.expires += 1;
       return false;
     }
-    
+
     return true;
   }
 
@@ -167,7 +171,7 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
   public getStatistics(): CacheStatistics {
     const totalRequests = this.statistics.hits + this.statistics.misses;
     const hitRate = totalRequests > 0 ? (this.statistics.hits / totalRequests) * 100 : 0;
-    
+
     return {
       ...this.statistics,
       hitRate,
@@ -220,18 +224,18 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
   public getEntryMetadata(key: string): Partial<CacheEntry> | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
-    
+
     const result: Partial<CacheEntry> = {
       created: entry.created,
       accessed: entry.accessed,
       accessCount: entry.accessCount,
       expires: entry.expires,
     };
-    
+
     if (entry.metadata) {
       result.metadata = entry.metadata;
     }
-    
+
     return result;
   }
 
@@ -241,7 +245,7 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
   public setEntryMetadata(key: string, metadata: Record<string, unknown>): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     entry.metadata = { ...entry.metadata, ...metadata };
     this.cache.set(key, entry);
     return true;
@@ -280,7 +284,7 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
       ...(ttl !== undefined && { ttl }),
     };
 
-    this.eventListeners.forEach(listener => {
+    this.eventListeners.forEach((listener) => {
       try {
         listener(event);
       } catch (error) {
@@ -337,6 +341,7 @@ export class EnhancedMemoryCacheStrategy implements CachingStrategy {
  */
 export class TieredCacheStrategy implements CachingStrategy {
   private l1Cache: EnhancedMemoryCacheStrategy;
+
   private l2Cache: EnhancedMemoryCacheStrategy;
 
   constructor(l1MaxSize: number = 100, l2MaxSize: number = 1000) {
@@ -414,7 +419,9 @@ export class TieredCacheStrategy implements CachingStrategy {
  */
 export class RedisLikeCacheStrategy implements CachingStrategy {
   private cache = new Map<string, CacheEntry>();
+
   private maxSize: number = 1000;
+
   private statistics: Omit<CacheStatistics, 'hitRate' | 'totalRequests' | 'averageResponseTime'> = {
     hits: 0,
     misses: 0,
@@ -458,7 +465,7 @@ export class RedisLikeCacheStrategy implements CachingStrategy {
 
   public set<T>(key: string, value: T, ttl: number = 300000): void {
     const now = Date.now();
-    
+
     // Implement random eviction if cache is full
     if (this.cache.size >= this.maxSize) {
       this.evictRandom();
@@ -486,13 +493,13 @@ export class RedisLikeCacheStrategy implements CachingStrategy {
   public has(key: string): boolean {
     const item = this.cache.get(key);
     if (!item) return false;
-    
+
     if (Date.now() > item.expires) {
       this.cache.delete(key);
       this.statistics.expires += 1;
       return false;
     }
-    
+
     return true;
   }
 
@@ -511,7 +518,7 @@ export class RedisLikeCacheStrategy implements CachingStrategy {
   public getStatistics(): CacheStatistics {
     const totalRequests = this.statistics.hits + this.statistics.misses;
     const hitRate = totalRequests > 0 ? (this.statistics.hits / totalRequests) * 100 : 0;
-    
+
     return {
       ...this.statistics,
       hitRate,
@@ -557,7 +564,9 @@ export class RedisLikeCacheStrategy implements CachingStrategy {
  */
 export class CacheManager {
   private strategies: Map<string, CachingStrategy> = new Map();
+
   private defaultStrategy: string = 'memory';
+
   private eventListeners: ((event: CacheEvent) => void)[] = [];
 
   constructor() {
@@ -577,11 +586,11 @@ export class CacheManager {
   public getStrategy(name?: string): CachingStrategy {
     const strategyName = name || this.defaultStrategy;
     const strategy = this.strategies.get(strategyName);
-    
+
     if (!strategy) {
       throw new Error(`Cache strategy '${strategyName}' not found`);
     }
-    
+
     return strategy;
   }
 
@@ -630,4 +639,4 @@ export class CacheManager {
 }
 
 // Export singleton instance
-export const cacheManager = new CacheManager(); 
+export const cacheManager = new CacheManager();

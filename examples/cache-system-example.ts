@@ -12,7 +12,6 @@ import {
   CacheManager,
   cacheManager,
 } from '../src';
-
 import type {
   CacheEvent,
   CacheStatistics,
@@ -47,6 +46,7 @@ class CacheEventLogger {
  */
 class CachePerformanceMonitor {
   private hitRates: number[] = [];
+
   private eventCounts: Record<string, number> = {};
 
   public onCacheEvent(event: CacheEvent): void {
@@ -110,11 +110,11 @@ async function demonstrateCacheSystem(): Promise<void> {
   enhancedCache.setEntryMetadata('user:1', {
     source: 'database',
     lastUpdated: new Date().toISOString(),
-    priority: 'high'
+    priority: 'high',
   });
 
   const metadata = enhancedCache.getEntryMetadata('user:1');
-  console.log(`  Metadata for user:1:`, metadata);
+  console.log('  Metadata for user:1:', metadata);
 
   // Get statistics
   const stats = enhancedCache.getStatistics();
@@ -163,7 +163,7 @@ async function demonstrateCacheSystem(): Promise<void> {
     redisLikeCache.set(`item:${i}`, {
       id: i,
       data: `Data for item ${i}`,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }, 300000);
   }
 
@@ -186,7 +186,7 @@ async function demonstrateCacheSystem(): Promise<void> {
 
   console.log('\n📋 Registered Strategies:');
   const strategies = cacheManager.getRegisteredStrategies();
-  strategies.forEach(strategy => {
+  strategies.forEach((strategy) => {
     console.log(`  - ${strategy}`);
   });
 
@@ -197,7 +197,7 @@ async function demonstrateCacheSystem(): Promise<void> {
 
   console.log('✅ Custom strategy registered');
   console.log('\n📋 Updated Registered Strategies:');
-  cacheManager.getRegisteredStrategies().forEach(strategy => {
+  cacheManager.getRegisteredStrategies().forEach((strategy) => {
     console.log(`  - ${strategy}`);
   });
 
@@ -275,7 +275,7 @@ function demonstrateCacheUsage(): void {
   tieredCache.set('user:profile:123', {
     name: 'John Doe',
     email: 'john@example.com',
-    preferences: { theme: 'dark', language: 'en' }
+    preferences: { theme: 'dark', language: 'en' },
   }, 300000);
 
   console.log('  ✅ Session data cached in L1 (fast access)');
@@ -289,7 +289,7 @@ function demonstrateCacheUsage(): void {
   metadataCache.setEntryMetadata('api:users', {
     source: 'database',
     lastSync: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.0',
   });
 
   const userData = metadataCache.get('api:users');
