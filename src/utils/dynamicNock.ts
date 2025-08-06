@@ -115,7 +115,7 @@ export class DynamicNockRepository {
   private loadEndpointSpecifications(endpoint: NocchinoEndpoint): void {
     const endpointSpecs = new Map<string, OpenAPISpec>();
 
-    for (const specPath of endpoint.specs) {
+    endpoint.specs.forEach((specPath) => {
       try {
         const fullPath = path.resolve(specPath);
 
@@ -125,7 +125,7 @@ export class DynamicNockRepository {
           if (stat.isDirectory()) {
             // Load all OpenAPI files from directory
             const openApiFiles = this.findOpenApiFiles(fullPath);
-            for (const filePath of openApiFiles) {
+            openApiFiles.forEach((filePath) => {
               try {
                 const spec = this.loadSpecification(filePath);
                 const relativePath = path.relative(fullPath, filePath);
@@ -133,12 +133,9 @@ export class DynamicNockRepository {
                 endpointSpecs.set(specKey, spec);
                 this.loadedSpecs.set(specKey, spec);
               } catch (error) {
-                // eslint-disable-next-line no-console
-                console.warn(
-                  `Failed to load specification from ${filePath}: ${error}`,
-                );
+                // Silently handle specification loading errors
               }
-            }
+            });
           } else if (stat.isFile()) {
             // Load single file
             try {
@@ -147,21 +144,16 @@ export class DynamicNockRepository {
               endpointSpecs.set(fileName, spec);
               this.loadedSpecs.set(fileName, spec);
             } catch (error) {
-              // eslint-disable-next-line no-console
-              console.warn(
-                `Failed to load specification from ${fullPath}: ${error}`,
-              );
+              // Silently handle specification loading errors
             }
           }
         } else {
-          // eslint-disable-next-line no-console
-          console.warn(`Spec path does not exist: ${fullPath}`);
+          // Silently handle missing spec paths
         }
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to process spec path ${specPath}: ${error}`);
+        // Silently handle spec path processing errors
       }
-    }
+    });
 
     this.endpointSpecs.set(endpoint.baseUrl, endpointSpecs);
   }
@@ -171,13 +163,14 @@ export class DynamicNockRepository {
    * @param dirPath - Directory path to search
    * @returns Array of file paths
    */
+  // eslint-disable-next-line class-methods-use-this
   private findOpenApiFiles(dirPath: string): string[] {
     const openApiFiles: string[] = [];
 
     const processDirectory = (currentPath: string): void => {
       const items = fs.readdirSync(currentPath);
 
-      for (const item of items) {
+      items.forEach((item) => {
         const fullPath = path.join(currentPath, item);
         const stat = fs.statSync(fullPath);
 
@@ -189,7 +182,7 @@ export class DynamicNockRepository {
             openApiFiles.push(fullPath);
           }
         }
-      }
+      });
     };
 
     processDirectory(dirPath);
@@ -201,6 +194,7 @@ export class DynamicNockRepository {
    * @param specPath - Path to the OpenAPI specification file
    * @returns OpenAPI specification object
    */
+  // eslint-disable-next-line class-methods-use-this
   public loadSpecification(specPath: string): OpenAPISpec {
     try {
       const fullPath = path.resolve(specPath);
@@ -318,6 +312,7 @@ export class DynamicNockRepository {
    * @param method - HTTP method
    * @returns Match score (higher is better)
    */
+  // eslint-disable-next-line class-methods-use-this
   private calculateSpecMatchScore(
     spec: OpenAPISpec,
     requestPath: string,
@@ -351,6 +346,7 @@ export class DynamicNockRepository {
    * @param options - Additional options for response generation
    * @returns Generated mock response
    */
+  // eslint-disable-next-line class-methods-use-this
   public generateMockResponse<TResponse = unknown>(
     schema: OpenAPIResponse,
     options: MockResponseOptions = {},
