@@ -350,6 +350,39 @@ export interface CachingStrategy {
   delete(key: string): boolean
 }
 
+// Enhanced cache system types
+export interface CacheEvent {
+  type: 'hit' | 'miss' | 'set' | 'delete' | 'clear' | 'expire' | 'evict'
+  key: string
+  timestamp: number
+  data?: unknown
+  ttl?: number
+}
+
+export interface CacheStatistics {
+  hits: number
+  misses: number
+  sets: number
+  deletes: number
+  clears: number
+  expires: number
+  evictions: number
+  hitRate: number
+  totalRequests: number
+  averageResponseTime: number
+  cacheSize: number
+  maxSize: number
+}
+
+export interface CacheEntry<T = unknown> {
+  value: T
+  expires: number
+  created: number
+  accessed: number
+  accessCount: number
+  metadata?: Record<string, unknown> | undefined
+}
+
 export interface ErrorRecoveryStrategy {
   canHandle(error: NocchinoError): boolean
   handle(error: NocchinoError): Promise<void>

@@ -33,6 +33,15 @@ export {
   AbortStrategy,
 } from './utils/strategies';
 
+// Export enhanced cache system
+export {
+  EnhancedMemoryCacheStrategy,
+  TieredCacheStrategy,
+  RedisLikeCacheStrategy,
+  CacheManager,
+  cacheManager,
+} from './utils/cacheSystem';
+
 export {
   NockRepositoryFactory,
   RepositoryConfigBuilder,
@@ -98,6 +107,10 @@ export type {
   IErrorRecoveryStrategy,
   RepositoryConfig,
   MockResponse,
+  // Enhanced cache system types
+  CacheEvent,
+  CacheStatistics,
+  CacheEntry,
 } from './types';
 
 // Export error handling types

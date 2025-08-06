@@ -14,6 +14,11 @@ import type {
   IErrorRecoveryStrategy,
 } from '../types';
 
+import {
+  EnhancedMemoryCacheStrategy,
+  TieredCacheStrategy,
+  RedisLikeCacheStrategy,
+} from './cacheSystem';
 import { EventManager } from './eventManager';
 import {
   JsonSchemaFakerStrategy,
@@ -42,7 +47,7 @@ export class NockRepositoryFactory {
     const config: RepositoryConfig = {
       eventManager: new EventManager(),
       mockGenerationStrategy: new JsonSchemaFakerStrategy(),
-      cachingStrategy: new MemoryCacheStrategy(),
+      cachingStrategy: new EnhancedMemoryCacheStrategy(),
       errorRecoveryStrategies: [
         new RetryStrategy(),
         new FallbackStrategy(),
@@ -63,7 +68,7 @@ export class NockRepositoryFactory {
     const config: RepositoryConfig = {
       eventManager: new EventManager(),
       mockGenerationStrategy: new EmptyObjectStrategy(), // Fastest strategy
-      cachingStrategy: new MemoryCacheStrategy(2000), // Larger cache
+      cachingStrategy: new TieredCacheStrategy(100, 2000), // Tiered cache for performance
       errorRecoveryStrategies: [
         new LogAndContinueStrategy(), // Minimal error handling for speed
       ],
@@ -161,7 +166,7 @@ export class NockRepositoryFactory {
     const config: RepositoryConfig = {
       eventManager: new EventManager(),
       mockGenerationStrategy: new JsonSchemaFakerStrategy(),
-      cachingStrategy: new MemoryCacheStrategy(5000), // Large cache for production
+      cachingStrategy: new RedisLikeCacheStrategy(5000), // Redis-like cache for production
       errorRecoveryStrategies: [
         new RetryStrategy(5, 2000), // More retries with longer delays
         new FallbackStrategy(),
@@ -187,6 +192,9 @@ export class NockRepositoryFactory {
       },
       caching: {
         MemoryCache: MemoryCacheStrategy,
+        EnhancedMemoryCache: EnhancedMemoryCacheStrategy,
+        TieredCache: TieredCacheStrategy,
+        RedisLikeCache: RedisLikeCacheStrategy,
         NoCache: NoCacheStrategy,
       },
       errorRecovery: {
@@ -230,7 +238,7 @@ export class RepositoryConfigBuilder {
   private config: RepositoryConfig = {
     eventManager: new EventManager(),
     mockGenerationStrategy: new JsonSchemaFakerStrategy(),
-    cachingStrategy: new MemoryCacheStrategy(),
+    cachingStrategy: new EnhancedMemoryCacheStrategy(),
     errorRecoveryStrategies: [
       new RetryStrategy(),
       new FallbackStrategy(),
